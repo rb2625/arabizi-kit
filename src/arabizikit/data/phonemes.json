@@ -1,0 +1,101 @@
+{
+  "version": "0.1.0",
+  "description": "Arabizi -> Arabic phoneme tables for arabizikit. Digraphs are tried longest-first before single letters. 'alternatives' lists are in priority order and are used to generate ranked candidate transliterations.",
+  "digraphs": {
+    "kh": "خ",
+    "gh": "غ",
+    "sh": "ش",
+    "th": "ث",
+    "dh": "ذ",
+    "ch": "تش",
+    "ee": "ي",
+    "ii": "ي",
+    "oo": "و",
+    "uu": "و",
+    "aa": "ا",
+    "ou": "و",
+    "iy": "ي"
+  },
+  "digits": {
+    "2": {
+      "primary": "ء",
+      "alternatives": ["ق"],
+      "note": "The most ambiguous Arabizi character: glottal stop / hamza in Egypt and the Levant, qaf in Gulf and Iraq. Context rules and the lexicon resolve the common cases."
+    },
+    "3": { "primary": "ع", "alternatives": [] },
+    "5": { "primary": "خ", "alternatives": [] },
+    "6": { "primary": "ط", "alternatives": [] },
+    "7": { "primary": "ح", "alternatives": [] },
+    "8": { "primary": "ق", "alternatives": ["غ"], "note": "8 is qaf in the Egyptian convention; 8' is ghayn." },
+    "9": { "primary": "ص", "alternatives": [] },
+    "4": { "primary": "ذ", "alternatives": [] }
+  },
+  "letters": {
+    "a": { "primary": "ا", "alternatives": ["", "ع"], "note": "a is usually long alif, but a short a is often elided (3alayk -> عليك via the alternative); the ain reading is a distant alternative." },
+    "b": { "primary": "ب", "alternatives": [] },
+    "c": { "primary": "ع", "alternatives": ["س"] },
+    "d": { "primary": "د", "alternatives": ["ض"] },
+    "e": { "primary": "", "alternatives": ["ا"], "note": "Shwa / short e is usually elided in writing (3emel -> عمل)." },
+    "f": { "primary": "ف", "alternatives": [] },
+    "g": { "primary": "ج", "alternatives": ["غ"], "note": "Egyptian g = ج; Gulf g is often ق (gamar)." },
+    "h": { "primary": "ه", "alternatives": ["ح"] },
+    "i": { "primary": "ي", "alternatives": [""], "note": "Medial i between consonants is often a short vowel (bint -> بنت via the alternative)." },
+    "j": { "primary": "ج", "alternatives": [] },
+    "k": { "primary": "ك", "alternatives": [] },
+    "l": { "primary": "ل", "alternatives": [] },
+    "m": { "primary": "م", "alternatives": [] },
+    "n": { "primary": "ن", "alternatives": [] },
+    "o": { "primary": "و", "alternatives": [""], "note": "Short o is often elided (2akol -> آكل via the alternative)." },
+    "p": { "primary": "ب", "alternatives": [] },
+    "q": { "primary": "ق", "alternatives": ["غ"] },
+    "r": { "primary": "ر", "alternatives": [] },
+    "s": { "primary": "س", "alternatives": ["ص"] },
+    "t": { "primary": "ت", "alternatives": ["ط"] },
+    "u": { "primary": "و", "alternatives": [""], "note": "Short u is often elided (shukran -> شكرا via the alternative)." },
+    "v": { "primary": "ف", "alternatives": [] },
+    "w": { "primary": "و", "alternatives": [] },
+    "x": { "primary": "كس", "alternatives": [] },
+    "y": { "primary": "ي", "alternatives": [] },
+    "z": { "primary": "ز", "alternatives": ["ذ"] }
+  },
+  "context_rules": [
+    {
+      "id": "final_2_after_vowel_is_qaf",
+      "match": "2",
+      "when": "word_final_and_preceded_by_a_vowel_letter",
+      "map": "ق",
+      "note": "sou2 -> سوق, tare2 -> طريق, fo2 -> فوق"
+    },
+    {
+      "id": "initial_2_before_consonant",
+      "match": "2",
+      "when": "word_initial_followed_by_a_consonant",
+      "primary": "ق",
+      "alternatives": ["ا"],
+      "note": "2alb -> قلب (Gulf qaf) vs 2ktob -> اكتب (imperative alif). Both are produced as ranked candidates."
+    },
+    {
+      "id": "final_a_taa_marbuta",
+      "match": "a",
+      "when": "word_final",
+      "primary": "ة",
+      "alternatives": ["ا"],
+      "note": "7elwa -> حلوة (taa marbuta) is the default; hada -> هذا (alif) is the alternative, and the lexicon overrides the top ambiguous words."
+    },
+    {
+      "id": "final_i_is_ya",
+      "match": "i",
+      "when": "word_final",
+      "primary": "ي",
+      "note": "7abib -> حبيب, li -> لي"
+    }
+  ],
+  "bad_sequences": ["اا", "ةة", "عع", "ءء", "يءي", "ااا", "لللل"],
+  "hamza_seating": {
+    "word_initial": { "default": "أ", "before_ya": "إ" },
+    "after_waaw": "ؤ",
+    "after_ya": "ئ",
+    "after_alif": "أ",
+    "else": "ء"
+  }
+}
