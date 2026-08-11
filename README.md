@@ -85,7 +85,7 @@ CLI:
 ```bash
 arabizikit "shu 3am 3emel el yom" --top-k 5 --dialect
 arabizikit "bach n9ra lktab" --hint maghrebi # assume a dialect convention
-arabizikit "ya3ne shu" --llm # LLM-assisted (needs ANTHROPIC_API_KEY)
+arabizikit "ya3ne shu" --llm # LLM-assisted (needs an LLM key; Groq free tier by default)
 arabizikit eval # run the benchmark
 arabizikit eval --json # machine-readable report
 arabizikit normalize "مُحَمَّد ـ" # orthographic normalisation
@@ -119,7 +119,7 @@ no new dependencies. Harvesting works two ways:
 ```bash
 arabizikit corpus harvest-hf --dataset Mohamedd123321/Arabizi-dataset-v2 --rows 500
 arabizikit corpus filter
-arabizikit corpus annotate # needs ANTHROPIC_API_KEY
+arabizikit corpus annotate # needs GROQ_API_KEY (free tier)
 arabizikit corpus split
 ```
 
@@ -130,7 +130,7 @@ arabizikit corpus run --hf-dataset Mohamedd123321/Arabizi-dataset-v2 --rows 500
 ```
 
 - filter: keeps Latin-script sentences that score as Arabizi (digit+letter markers, lexicon words), strips URLs, mentions, hashtags, and emoji, and splits posts into sentences
-- annotate: Claude renders Arabic script and a dialect tag per sentence; the rule engine top-1 is stored alongside for agreement, and a deterministic 10% sample is annotated twice to report inter-annotator agreement
+- annotate: the configured LLM renders Arabic script and a dialect tag per sentence; the rule engine top-1 is stored alongside for agreement, and a deterministic 10% sample is annotated twice to report inter-annotator agreement. No paid API needed: Groq's free tier is the default (openai/gpt-oss-120b, no credit card), with Gemini, OpenAI, local Ollama, and Anthropic as fallbacks. Pick one with --provider or ARABIZIKIT_PROVIDER and set the matching key (GROQ_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or ARABIZIKIT_API_KEY to override). Batch runs pace themselves under the free tier's per-minute limits, write each batch to disk, and resume where they left off
 - split: stratified train/dev/test by dialect, written in benchmark format
 
 External parallel sets with gold references score instantly, no API cost:
@@ -141,6 +141,23 @@ arabizikit corpus import-hf --dataset akhanafer/arabic-to-arabizi --arabizi-fiel
 arabizikit corpus import-hf --dataset elkababi2/Darija-Text-Ar-Arabizi --arabizi-field darija_Latn --arabic-field darija_Arab_new
 arabizikit eval --data corpus_data/external/Arabizi_Transliteration.json
 ```
+
+The pipeline has run end to end on the free tier: 355 sentences from
+Mohamedd123321/Arabizi-dataset-v2 were annotated with openai/gpt-oss-120b.
+Inter-annotator agreement over the double-annotated 10% sample was 0.171,
+the honest measure of how ambiguous Arabizi rendering is (the same model
+rarely produces the identical rendering twice, and both are usually valid).
+323 usable rows split into train/dev/test; scoring the held-out test set
+measures the rules against human-level renderings:
+
+| set | n | exact | hit@3 | CER |
+| --- | --- | --- | --- | --- |
+| pipeline test set (LLM references) | 49 | 0.000 | 0.000 | 0.299 |
+
+The near-zero exact score is the point, not a bug: the rules emit literal
+letter mappings (mettabbal -> متتاببال) while natural renderings differ in
+spelling, morphology, and word choice. That gap is what the v0.4 reranker
+closes by learning from the annotated corpus.
 
 Score a pipeline-split held-out test set with:
 
@@ -196,7 +213,7 @@ top-3. Picking that reading is the reranker's job in v0.4.
 ## Roadmap
 
 - [x] **v0.1** - rule engine, seed lexicon, dialect baseline, benchmark, CLI, browser demo, paper outline
-- [x] **v0.2** - corpus pipeline built (harvest, filter, LLM annotation, stratified split); three external held-out sets evaluated, results in Benchmark
+- [x] **v0.2** - corpus pipeline built and run end to end: harvest, filter, LLM annotation on the free tier with inter-annotator agreement, stratified split; three external held-out sets plus the pipeline test set evaluated, results in Benchmark
 - [x] **v0.3** - Maghrebi rule coverage (9/ch/doubling/case conventions) and dialect hints; results in Benchmark
 - [ ] **v0.4** - automatic dialect classifier and a reranker over the top-k candidates (the manual hint becomes automatic)
 - [ ] **v0.5** - LLM mode as a first-class API, npm/JS distribution

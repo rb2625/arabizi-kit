@@ -26,6 +26,17 @@ KNOWN_DIALECTS = {
     "elkababi2/Darija-Text-Ar-Arabizi": "maghrebi",
 }
 
+# LLM annotators occasionally tag with near-miss spellings; fold them into
+# the canonical dialect names before stratification.
+DIALECT_ALIASES = {
+    "egyptic": "egyptian",
+    "egypt": "egyptian",
+    "maghribi": "maghrebi",
+    "moroccan": "maghrebi",
+    "levant": "levantine",
+    "khaleeji": "gulf",
+}
+
 
 def load_annotated(path: str | Path) -> list[dict]:
     path = Path(path)
@@ -50,7 +61,12 @@ def split_annotated(
 
     by_dialect: dict[str, list[dict]] = {}
     for r in rows:
-        by_dialect.setdefault(r.get("dialect", "other"), []).append(r)
+        if not str(r.get("arabic") or "").strip():
+            continue  # unusable reference; would poison the eval
+        tag = str(r.get("dialect") or "other").strip().lower()
+        tag = DIALECT_ALIASES.get(tag, tag)
+        r["dialect"] = tag
+        by_dialect.setdefault(tag, []).append(r)
 
     rng = random.Random(seed)
     buckets = {"train": [], "dev": [], "test": []}
@@ -87,8 +103,9 @@ def split_annotated(
         path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         written[name] = len(entries)
 
+    kept = sum(len(g) for g in by_dialect.values())
     dialect_counts = {d: len(g) for d, g in by_dialect.items()}
-    return {"n": len(rows), "splits": written, "dialects": dialect_counts, "out": str(out_dir)}
+    return {"n": kept, "skipped_empty": len(rows) - kept, "splits": written, "dialects": dialect_counts, "out": str(out_dir)}
 
 
 def import_parallel(

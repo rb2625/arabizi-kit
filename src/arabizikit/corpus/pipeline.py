@@ -17,11 +17,13 @@ def run(
     annotate_enabled: bool = True,
     split_enabled: bool = True,
     min_score: int | None = None,
+    provider: str = config.ANNOTATION_PROVIDER,
 ) -> dict:
     """Run the full pipeline and return per-stage stats.
 
     Use hf_dataset to harvest from Hugging Face (no account needed) instead
-    of Reddit.
+    of Reddit. Provider picks the LLM backend for annotation; the default is
+    Groq's free tier.
     """
     report: dict = {"harvest": None, "filter": None, "annotate": None, "split": None}
 
@@ -34,7 +36,11 @@ def run(
 
     annotated_path = config.ANNOTATED_DIR / "annotated.jsonl"
     if annotate_enabled:
-        report["annotate"] = annotate(candidates_path=config.CORPUS_DIR / "candidates.jsonl", out_path=annotated_path)
+        report["annotate"] = annotate(
+            candidates_path=config.CORPUS_DIR / "candidates.jsonl",
+            out_path=annotated_path,
+            provider=provider,
+        )
     elif not annotated_path.exists():
         report["split"] = {"error": "no annotated data; run annotate first"}
 

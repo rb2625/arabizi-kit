@@ -31,9 +31,15 @@ MIN_ARABIZI_SCORE = 2
 MIN_WORDS = 2
 MAX_WORDS = 40
 
-ANNOTATION_MODEL = os.environ.get("ARABIZIKIT_MODEL", "claude-sonnet-4-5")
-ANNOTATION_BATCH = 10
-ANNOTATION_RETRIES = 3
+# LLM annotation. Provider defaults to Groq (free tier, no credit card);
+# see arabizikit.llm for the others (openai, gemini, ollama, anthropic).
+# Switch with ARABIZIKIT_PROVIDER or --provider. Keys: GROQ_API_KEY,
+# OPENAI_API_KEY, GEMINI_API_KEY, ANTHROPIC_API_KEY, or ARABIZIKIT_API_KEY
+# as a blanket override. Ollama needs no key.
+ANNOTATION_PROVIDER = os.environ.get("ARABIZIKIT_PROVIDER", "groq")
+ANNOTATION_MODEL = os.environ.get("ARABIZIKIT_MODEL") or None  # None = provider default
+ANNOTATION_BATCH = 5  # keep requests small so free-tier per-minute token limits don't bite
+ANNOTATION_RETRIES = 4
 ANNOTATION_TIMEOUT = 90
 IAA_SAMPLE = 0.1  # share of sentences double-annotated for inter-annotator agreement
 

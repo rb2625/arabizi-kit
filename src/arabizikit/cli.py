@@ -5,7 +5,7 @@ Examples::
     arabizikit "ana 3ayz 2akol"
     arabizikit "shlonak ya 5al" --dialect
     arabizikit "shu 3am 3emel" --top-k 5
-    arabizikit "ya3ne shu" --llm          # requires ANTHROPIC_API_KEY
+    arabizikit "ya3ne shu" --llm          # needs an LLM key (Groq free tier by default)
     arabizikit eval
     arabizikit eval --json
     arabizikit eval --data corpus_data/splits/test.json
@@ -14,11 +14,11 @@ Examples::
 Corpus pipeline (v0.2)::
 
     # no-account path: harvest from a public Hugging Face dataset
-    arabizikit corpus harvest-hf --dataset AhmedSSabir/Gulf-Arabic-Tweets-2018-2020 --rows 500
+    arabizikit corpus harvest-hf --dataset Mohamedd123321/Arabizi-dataset-v2 --rows 500
     arabizikit corpus filter
-    arabizikit corpus annotate            # requires ANTHROPIC_API_KEY
+    arabizikit corpus annotate            # needs GROQ_API_KEY (free tier) by default
     arabizikit corpus split
-    arabizikit corpus run --hf-dataset AhmedSSabir/Gulf-Arabic-Tweets-2018-2020 --rows 500
+    arabizikit corpus run --hf-dataset Mohamedd123321/Arabizi-dataset-v2 --rows 500
 
     # external parallel set with gold references (instant eval, no API cost)
     arabizikit corpus import-hf --dataset arbml/Arabizi_Transliteration \
@@ -57,7 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dialect", action="store_true", help="show the detected dialect")
     parser.add_argument("--hint", metavar="DIALECT", default=None, help="assume a dialect convention (egyptian, levantine, gulf, maghrebi) for the ambiguous readings")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
-    parser.add_argument("--llm", action="store_true", help="LLM-assisted disambiguation (requires ANTHROPIC_API_KEY)")
+    parser.add_argument("--llm", action="store_true", help="LLM-assisted disambiguation (needs an LLM key; Groq free tier by default)")
     parser.add_argument("--eval", nargs="?", const="default", metavar="DATA", help="run the benchmark suite")
     parser.add_argument("--data", metavar="FILE", help="evaluate against a benchmark file (alias for --eval FILE)")
     parser.add_argument("--normalize", nargs="+", metavar="TEXT", help="normalise Arabic text")
@@ -74,6 +74,7 @@ def corpus_main(argv: list[str]) -> int:
     p_run.add_argument("--hf-dataset", default=None, help="harvest from Hugging Face instead of Reddit")
     p_run.add_argument("--rows", type=int, default=500)
     p_run.add_argument("--min-score", type=int, default=None)
+    p_run.add_argument("--provider", default=corpus_config.ANNOTATION_PROVIDER, help="LLM provider for annotation (default groq)")
     p_run.add_argument("--no-annotate", action="store_true", help="skip LLM annotation")
     p_run.add_argument("--no-split", action="store_true", help="skip the split")
 
@@ -100,10 +101,11 @@ def corpus_main(argv: list[str]) -> int:
     p_filter = sub.add_parser("filter", help="extract Arabizi sentences from raw posts")
     p_filter.add_argument("--min-score", type=int, default=None)
 
-    p_annotate = sub.add_parser("annotate", help="LLM-annotate candidates (needs ANTHROPIC_API_KEY)")
+    p_annotate = sub.add_parser("annotate", help="LLM-annotate candidates (needs GROQ_API_KEY by default; free tier)")
     p_annotate.add_argument("--batch", type=int, default=corpus_config.ANNOTATION_BATCH)
     p_annotate.add_argument("--iaa", type=float, default=corpus_config.IAA_SAMPLE, help="share annotated twice for agreement")
-    p_annotate.add_argument("--model", default=corpus_config.ANNOTATION_MODEL)
+    p_annotate.add_argument("--provider", default=corpus_config.ANNOTATION_PROVIDER, help="LLM provider: groq (default), openai, gemini, ollama, anthropic")
+    p_annotate.add_argument("--model", default=corpus_config.ANNOTATION_MODEL, help="model name (defaults to the provider default)")
 
     p_split = sub.add_parser("split", help="stratified train/dev/test split in benchmark format")
     p_split.add_argument("--train", type=float, default=0.70)
@@ -122,6 +124,7 @@ def corpus_main(argv: list[str]) -> int:
             annotate_enabled=not args.no_annotate,
             split_enabled=not args.no_split,
             min_score=args.min_score,
+            provider=args.provider,
         )
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0
@@ -170,7 +173,12 @@ def corpus_main(argv: list[str]) -> int:
 
     if args.cmd == "annotate":
         try:
-            report = corpus_annotate.annotate(batch_size=args.batch, iaa_sample=args.iaa)
+            report = corpus_annotate.annotate(
+                batch_size=args.batch,
+                iaa_sample=args.iaa,
+                provider=args.provider,
+                model=args.model,
+            )
             print(json.dumps(report, ensure_ascii=False, indent=2))
         except (OSError, ValueError, RuntimeError) as exc:
             print(f"annotation failed: {exc}", file=sys.stderr)
