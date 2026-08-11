@@ -1,179 +1,179 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ArabiziKit — Arabizi to Arabic script</title>
-  <meta name="description" content="Open-source Arabizi (Romanized Arabic) → Arabic-script transliteration with dialect tagging. Type Arabizi, read Arabic." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --paper: #f6f2ea;
-      --ink: #23201b;
-      --ink-soft: #6f695d;
-      --ink-faint: #a29b8c;
-      --line: rgba(35, 32, 27, .13);
-      --line-strong: rgba(35, 32, 27, .3);
-      --clay: #b4552d;
-      --clay-soft: rgba(180, 85, 45, .1);
-      --serif: "Newsreader", Georgia, serif;
-      --arabic: "Amiri", "Newsreader", serif;
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0; min-height: 100vh;
-      background: radial-gradient(1100px 520px at 50% -6%, rgba(255, 255, 255, .6), transparent 62%), var(--paper);
-      color: var(--ink); font-family: var(--serif); font-size: 19px;
-      -webkit-font-smoothing: antialiased;
-    }
-    ::selection { background: var(--clay-soft); }
+ <meta charset="utf-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1" />
+ <title>ArabiziKit - Arabizi to Arabic script</title>
+ <meta name="description" content="Open-source Arabizi (Romanized Arabic) -> Arabic-script transliteration with dialect tagging. Type Arabizi, read Arabic." />
+ <link rel="preconnect" href="https://fonts.googleapis.com" />
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+ <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+ <style>
+ :root {
+ --paper: #f6f2ea;
+ --ink: #23201b;
+ --ink-soft: #6f695d;
+ --ink-faint: #a29b8c;
+ --line: rgba(35, 32, 27, .13);
+ --line-strong: rgba(35, 32, 27, .3);
+ --clay: #b4552d;
+ --clay-soft: rgba(180, 85, 45, .1);
+ --serif: "Newsreader", Georgia, serif;
+ --arabic: "Amiri", "Newsreader", serif;
+ }
+ * { box-sizing: border-box; }
+ html { scroll-behavior: smooth; }
+ body {
+ margin: 0; min-height: 100vh;
+ background: radial-gradient(1100px 520px at 50% -6%, rgba(255, 255, 255, .6), transparent 62%), var(--paper);
+ color: var(--ink); font-family: var(--serif); font-size: 19px;
+ -webkit-font-smoothing: antialiased;
+ }
+ ::selection { background: var(--clay-soft); }
 
-    .page { width: min(720px, calc(100% - 48px)); margin: 0 auto; padding: 64px 0 52px; }
+ .page { width: min(720px, calc(100% - 48px)); margin: 0 auto; padding: 64px 0 52px; }
 
-    /* ── header ─────────────────────────────────────── */
-    header {
-      display: flex; align-items: baseline; justify-content: space-between; gap: 18px;
-      padding-bottom: 20px; border-bottom: 1px solid var(--line);
-    }
-    .wordmark { font-size: 26px; font-weight: 600; letter-spacing: -0.01em; text-decoration: none; color: var(--ink); }
-    .wordmark i { font-style: italic; color: var(--clay); font-weight: 500; }
-    .tagline { font-size: 13.5px; font-style: italic; color: var(--ink-soft); }
+ /* ── header ─────────────────────────────────────── */
+ header {
+ display: flex; align-items: baseline; justify-content: space-between; gap: 18px;
+ padding-bottom: 20px; border-bottom: 1px solid var(--line);
+ }
+ .wordmark { font-size: 26px; font-weight: 600; letter-spacing: -0.01em; text-decoration: none; color: var(--ink); }
+ .wordmark i { font-style: italic; color: var(--clay); font-weight: 500; }
+ .tagline { font-size: 13.5px; font-style: italic; color: var(--ink-soft); }
 
-    /* ── intro ──────────────────────────────────────── */
-    .intro { margin: 54px 0 44px; }
-    .eyebrow { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 18px; }
-    .intro h1 {
-      font-size: clamp(40px, 6.6vw, 62px); line-height: 1.05; font-weight: 500;
-      letter-spacing: -0.015em; margin: 0 0 22px;
-    }
-    .intro h1 em { font-style: italic; color: var(--clay); }
-    .intro p { margin: 0; max-width: 34em; color: var(--ink-soft); font-size: 18px; line-height: 1.6; }
+ /* ── intro ──────────────────────────────────────── */
+ .intro { margin: 54px 0 44px; }
+ .eyebrow { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 18px; }
+ .intro h1 {
+ font-size: clamp(40px, 6.6vw, 62px); line-height: 1.05; font-weight: 500;
+ letter-spacing: -0.015em; margin: 0 0 22px;
+ }
+ .intro h1 em { font-style: italic; color: var(--clay); }
+ .intro p { margin: 0; max-width: 34em; color: var(--ink-soft); font-size: 18px; line-height: 1.6; }
 
-    /* ── input ──────────────────────────────────────── */
-    .field {
-      display: flex; align-items: baseline; gap: 16px;
-      border-bottom: 1px solid var(--line-strong); padding: 4px 2px 14px;
-      transition: border-color .2s;
-    }
-    .field:focus-within { border-color: var(--clay); }
-    .field .prompt { font-style: italic; color: var(--clay); font-size: 24px; }
-    .field input {
-      flex: 1; min-width: 0; background: transparent; border: 0; outline: 0;
-      font-family: var(--serif); font-size: 25px; color: var(--ink); caret-color: var(--clay);
-    }
-    .field input::placeholder { color: var(--ink-faint); font-style: italic; }
-    .copy {
-      border: 0; background: transparent; cursor: pointer;
-      font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--ink-soft);
-      padding: 4px 2px; white-space: nowrap; transition: color .2s;
-    }
-    .copy:hover { color: var(--clay); }
+ /* ── input ──────────────────────────────────────── */
+ .field {
+ display: flex; align-items: baseline; gap: 16px;
+ border-bottom: 1px solid var(--line-strong); padding: 4px 2px 14px;
+ transition: border-color .2s;
+ }
+ .field:focus-within { border-color: var(--clay); }
+ .field .prompt { font-style: italic; color: var(--clay); font-size: 24px; }
+ .field input {
+ flex: 1; min-width: 0; background: transparent; border: 0; outline: 0;
+ font-family: var(--serif); font-size: 25px; color: var(--ink); caret-color: var(--clay);
+ }
+ .field input::placeholder { color: var(--ink-faint); font-style: italic; }
+ .copy {
+ border: 0; background: transparent; cursor: pointer;
+ font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--ink-soft);
+ padding: 4px 2px; white-space: nowrap; transition: color .2s;
+ }
+ .copy:hover { color: var(--clay); }
 
-    /* ── output ─────────────────────────────────────── */
-    .output { padding: 52px 2px 40px; }
-    .out-ar {
-      font-family: var(--arabic); font-size: clamp(58px, 9.5vw, 100px); line-height: 1.3;
-      direction: rtl; text-align: left; color: var(--ink);
-      min-height: 1.3em; word-break: break-word;
-    }
-    .out-ar:empty::before { content: "…"; color: var(--ink-faint); font-size: .45em; }
-    .out-ar.flash { animation: rise .3s cubic-bezier(.2, .7, .3, 1); }
-    @keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-    .out-meta { margin-top: 22px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-    .dialect { display: flex; align-items: center; gap: 10px; font-size: 16.5px; font-style: italic; color: var(--ink-soft); }
-    .dialect .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--clay); }
-    .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-left: auto; }
-    .chip {
-      background: transparent; border: 1px solid var(--line); border-radius: 999px;
-      font-family: var(--arabic); font-size: 16.5px; color: var(--ink-soft);
-      padding: 6px 15px; cursor: pointer; transition: .18s;
-    }
-    .chip:hover { color: var(--clay); border-color: var(--clay); }
+ /* ── output ─────────────────────────────────────── */
+ .output { padding: 52px 2px 40px; }
+ .out-ar {
+ font-family: var(--arabic); font-size: clamp(58px, 9.5vw, 100px); line-height: 1.3;
+ direction: rtl; text-align: left; color: var(--ink);
+ min-height: 1.3em; word-break: break-word;
+ }
+ .out-ar:empty::before { content: "..."; color: var(--ink-faint); font-size: .45em; }
+ .out-ar.flash { animation: rise .3s cubic-bezier(.2, .7, .3, 1); }
+ @keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+ .out-meta { margin-top: 22px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+ .dialect { display: flex; align-items: center; gap: 10px; font-size: 16.5px; font-style: italic; color: var(--ink-soft); }
+ .dialect .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--clay); }
+ .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-left: auto; }
+ .chip {
+ background: transparent; border: 1px solid var(--line); border-radius: 999px;
+ font-family: var(--arabic); font-size: 16.5px; color: var(--ink-soft);
+ padding: 6px 15px; cursor: pointer; transition: .18s;
+ }
+ .chip:hover { color: var(--clay); border-color: var(--clay); }
 
-    /* ── examples ───────────────────────────────────── */
-    .examples { border-top: 1px solid var(--line); margin-top: 8px; }
-    .examples-head { display: flex; justify-content: space-between; align-items: baseline; padding: 26px 2px 8px; }
-    .examples-head h2 { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); margin: 0; font-weight: 500; }
-    .examples-head span { font-size: 13.5px; font-style: italic; color: var(--ink-faint); }
-    .example { display: flex; align-items: baseline; gap: 20px; padding: 15px 2px; border-bottom: 1px solid var(--line); cursor: pointer; transition: border-color .15s; }
-    .example:last-child { border-bottom: 0; }
-    .example:hover { border-color: var(--line-strong); }
-    .example .latin { font-size: 17.5px; transition: color .15s; }
-    .example:hover .latin { color: var(--clay); }
-    .example .ar { font-family: var(--arabic); font-size: 24px; direction: rtl; margin-left: auto; }
-    .example .d { font-size: 11px; text-transform: uppercase; letter-spacing: .14em; color: var(--ink-faint); min-width: 66px; text-align: right; }
+ /* ── examples ───────────────────────────────────── */
+ .examples { border-top: 1px solid var(--line); margin-top: 8px; }
+ .examples-head { display: flex; justify-content: space-between; align-items: baseline; padding: 26px 2px 8px; }
+ .examples-head h2 { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); margin: 0; font-weight: 500; }
+ .examples-head span { font-size: 13.5px; font-style: italic; color: var(--ink-faint); }
+ .example { display: flex; align-items: baseline; gap: 20px; padding: 15px 2px; border-bottom: 1px solid var(--line); cursor: pointer; transition: border-color .15s; }
+ .example:last-child { border-bottom: 0; }
+ .example:hover { border-color: var(--line-strong); }
+ .example .latin { font-size: 17.5px; transition: color .15s; }
+ .example:hover .latin { color: var(--clay); }
+ .example .ar { font-family: var(--arabic); font-size: 24px; direction: rtl; margin-left: auto; }
+ .example .d { font-size: 11px; text-transform: uppercase; letter-spacing: .14em; color: var(--ink-faint); min-width: 66px; text-align: right; }
 
-    /* ── footnote ───────────────────────────────────── */
-    .foot {
-      margin-top: 42px; padding-top: 18px; border-top: 1px solid var(--line);
-      display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
-      font-size: 13.5px; font-style: italic; color: var(--ink-faint);
-    }
-    .foot b { font-weight: 500; color: var(--ink-soft); }
-    .foot a { color: var(--ink-soft); text-decoration: none; transition: color .15s; }
-    .foot a:hover { color: var(--clay); }
+ /* ── footnote ───────────────────────────────────── */
+ .foot {
+ margin-top: 42px; padding-top: 18px; border-top: 1px solid var(--line);
+ display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+ font-size: 13.5px; font-style: italic; color: var(--ink-faint);
+ }
+ .foot b { font-weight: 500; color: var(--ink-soft); }
+ .foot a { color: var(--ink-soft); text-decoration: none; transition: color .15s; }
+ .foot a:hover { color: var(--clay); }
 
-    @media (max-width: 560px) {
-      .page { width: calc(100% - 40px); padding: 44px 0 36px; }
-      .tagline { display: none; }
-      .intro { margin: 40px 0 34px; }
-      .chips { margin-left: 0; width: 100%; }
-      .example .d { display: none; }
-      .output { padding: 40px 2px 32px; }
-    }
-    @media (prefers-reduced-motion: reduce) { .out-ar.flash { animation: none; } html { scroll-behavior: auto; } }
-  </style>
+ @media (max-width: 560px) {
+ .page { width: calc(100% - 40px); padding: 44px 0 36px; }
+ .tagline { display: none; }
+ .intro { margin: 40px 0 34px; }
+ .chips { margin-left: 0; width: 100%; }
+ .example .d { display: none; }
+ .output { padding: 40px 2px 32px; }
+ }
+ @media (prefers-reduced-motion: reduce) { .out-ar.flash { animation: none; } html { scroll-behavior: auto; } }
+ </style>
 </head>
 <body>
-  <div class="page">
-    <header>
-      <a class="wordmark" href="#">Arabizi<i>Kit</i></a>
-      <span class="tagline">arabizi → arabic script, in your own words</span>
-    </header>
+ <div class="page">
+ <header>
+ <a class="wordmark" href="#">Arabizi<i>Kit</i></a>
+ <span class="tagline">arabizi -> arabic script, in your own words</span>
+ </header>
 
-    <section class="intro">
-      <p class="eyebrow">An open-source transliteration toolkit</p>
-      <h1>Type Arabizi, <em>read Arabic.</em></h1>
-      <p>
-        "ana 3ayz 2akol", "shlonak ya 5al", "shu 3am 3emel" — the way millions of
-        people actually write Arabic online, given the script it deserves.
-        Dialect-aware, candidate-ranked, benchmarked. Runs in your browser.
-      </p>
-    </section>
+ <section class="intro">
+ <p class="eyebrow">An open-source transliteration toolkit</p>
+ <h1>Type Arabizi, <em>read Arabic.</em></h1>
+ <p>
+ "ana 3ayz 2akol", "shlonak ya 5al", "shu 3am 3emel" - the way millions of
+ people actually write Arabic online, given the script it deserves.
+ Dialect-aware, candidate-ranked, benchmarked. Runs in your browser.
+ </p>
+ </section>
 
-    <section class="field">
-      <span class="prompt">❝</span>
-      <input id="input" type="text" autocomplete="off" spellcheck="false"
-             placeholder="ana 3ayz 2akol" dir="ltr" />
-      <button class="copy" id="copy" title="Copy the Arabic" aria-label="Copy the Arabic">copy ✳</button>
-    </section>
+ <section class="field">
+ 
+ <input id="input" type="text" autocomplete="off" spellcheck="false"
+ placeholder="ana 3ayz 2akol" dir="ltr" />
+ <button class="copy" id="copy" title="Copy the Arabic" aria-label="Copy the Arabic">copy</button>
+ </section>
 
-    <section class="output">
-      <div class="out-ar" id="output"></div>
-      <div class="out-meta">
-        <span class="dialect"><span class="dot" id="dialect-dot"></span><span id="dialect">egyptian, confident</span></span>
-        <div class="chips" id="chips"></div>
-      </div>
-    </section>
+ <section class="output">
+ <div class="out-ar" id="output"></div>
+ <div class="out-meta">
+ <span class="dialect"><span class="dot" id="dialect-dot"></span><span id="dialect">egyptian, confident</span></span>
+ <div class="chips" id="chips"></div>
+ </div>
+ </section>
 
-    <section class="examples">
-      <div class="examples-head">
-        <h2>Examples</h2>
-        <span>tap one to try it</span>
-      </div>
-      <div id="samples"></div>
-    </section>
+ <section class="examples">
+ <div class="examples-head">
+ <h2>Examples</h2>
+ <span>tap one to try it</span>
+ </div>
+ <div id="samples"></div>
+ </section>
 
-    <footer class="foot">
-      <span><b>33</b> benchmark cases · exact@1 <b>1.000</b> · hit@3 <b>1.000</b></span>
-      <span>v0.1.0 — by <a href="https://github.com/rb2625" target="_blank" rel="noreferrer">Muhammed Rabeeh Mattath</a> · <a href="https://github.com/rb2625/arabizi-kit" target="_blank" rel="noreferrer">github ↗</a></span>
-    </footer>
-  </div>
+ <footer class="foot">
+ <span><b>33</b> benchmark cases | exact@1 <b>1.000</b> | hit@3 <b>1.000</b></span>
+ <span>v0.1.0 - by <a href="https://github.com/rb2625" target="_blank" rel="noreferrer">Muhammed Rabeeh Mattath</a> | <a href="https://github.com/rb2625/arabizi-kit" target="_blank" rel="noreferrer">github</a></span>
+ </footer>
+ </div>
 
-  <script>
+ <script>
 /* arabizikit.js — generated by scripts/build_web.py. Do not edit by hand.
  * Data tables come verbatim from src/arabizikit/data/ (single source of truth). */
 
@@ -1421,70 +1421,70 @@ const LEXICON = {
 })(typeof window !== "undefined" ? window : globalThis);
 
 </script>
-  <script>
-    const SAMPLES = [
-      { latin: "ana 3ayz 2akol", dialect: "egyptian", ar: "أنا عايز آكل" },
-      { latin: "shlonak ya 5al", dialect: "gulf", ar: "شلونك يا خال" },
-      { latin: "shu 3am 3emel el yom", dialect: "levantine", ar: "شو عم عمل اليوم" },
-      { latin: "wacha kolshi mzyan", dialect: "maghrebi", ar: "واش كلشي مزيان" },
-      { latin: "yalla nro7 3al 7ay", dialect: "gulf", ar: "يلا نروح على الحي" },
-      { latin: "hatha maqal mumtaz", dialect: "msa", ar: "هذا مقال ممتاز" },
-    ];
+ <script>
+ const SAMPLES = [
+ { latin: "ana 3ayz 2akol", dialect: "egyptian", ar: "أنا عايز آكل" },
+ { latin: "shlonak ya 5al", dialect: "gulf", ar: "شلونك يا خال" },
+ { latin: "shu 3am 3emel el yom", dialect: "levantine", ar: "شو عم عمل اليوم" },
+ { latin: "wacha kolshi mzyan", dialect: "maghrebi", ar: "واش كلشي مزيان" },
+ { latin: "yalla nro7 3al 7ay", dialect: "gulf", ar: "يلا نروح على الحي" },
+ { latin: "hatha maqal mumtaz", dialect: "msa", ar: "هذا مقال ممتاز" },
+ ];
 
-    const input = document.getElementById("input");
-    const output = document.getElementById("output");
-    const dialectEl = document.getElementById("dialect");
-    const chipsEl = document.getElementById("chips");
-    const samplesEl = document.getElementById("samples");
-    const copyBtn = document.getElementById("copy");
+ const input = document.getElementById("input");
+ const output = document.getElementById("output");
+ const dialectEl = document.getElementById("dialect");
+ const chipsEl = document.getElementById("chips");
+ const samplesEl = document.getElementById("samples");
+ const copyBtn = document.getElementById("copy");
 
-    function render(text) {
-      const res = ArabiziKit.transliterate(text, { topK: 4, withDialect: true });
-      output.textContent = res.text;
-      output.classList.remove("flash");
-      void output.offsetWidth;
-      output.classList.add("flash");
+ function render(text) {
+ const res = ArabiziKit.transliterate(text, { topK: 4, withDialect: true });
+ output.textContent = res.text;
+ output.classList.remove("flash");
+ void output.offsetWidth;
+ output.classList.add("flash");
 
-      const d = res.dialect ? res.dialect.dialect : "unknown";
-      dialectEl.textContent = d + (res.dialect && res.dialect.confidence ? ", confident" : "");
+ const d = res.dialect ? res.dialect.dialect : "unknown";
+ dialectEl.textContent = d + (res.dialect && res.dialect.confidence ? ", confident" : "");
 
-      chipsEl.innerHTML = "";
-      res.candidates.slice(1).forEach((c, i) => {
-        const chip = document.createElement("button");
-        chip.className = "chip";
-        chip.textContent = c.ar;
-        chip.title = "alternative reading";
-        chip.addEventListener("click", () => { output.textContent = c.ar; });
-        chipsEl.appendChild(chip);
-      });
-    }
+ chipsEl.innerHTML = "";
+ res.candidates.slice(1).forEach((c, i) => {
+ const chip = document.createElement("button");
+ chip.className = "chip";
+ chip.textContent = c.ar;
+ chip.title = "alternative reading";
+ chip.addEventListener("click", () => { output.textContent = c.ar; });
+ chipsEl.appendChild(chip);
+ });
+ }
 
-    input.addEventListener("input", () => render(input.value));
-    render("ana 3ayz 2akol");
-    input.value = "ana 3ayz 2akol";
+ input.addEventListener("input", () => render(input.value));
+ render("ana 3ayz 2akol");
+ input.value = "ana 3ayz 2akol";
 
-    copyBtn.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(output.textContent);
-        copyBtn.textContent = "copied ✓";
-        setTimeout(() => (copyBtn.textContent = "copy ✳"), 900);
-      } catch (_) { /* clipboard unavailable */ }
-    });
+ copyBtn.addEventListener("click", async () => {
+ try {
+ await navigator.clipboard.writeText(output.textContent);
+ copyBtn.textContent = "copied";
+ setTimeout(() => (copyBtn.textContent = "copy"), 900);
+ } catch (_) { /* clipboard unavailable */ }
+ });
 
-    SAMPLES.forEach((s) => {
-      const el = document.createElement("div");
-      el.className = "example";
-      el.innerHTML =
-        '<span class="latin">' + s.latin + "</span>" +
-        '<span class="ar">' + s.ar + "</span>" +
-        '<span class="d">' + s.dialect + "</span>";
-      el.addEventListener("click", () => {
-        input.value = s.latin;
-        render(s.latin);
-        input.focus();
-      });
-      samplesEl.appendChild(el);
-    });
-  </script>
+ SAMPLES.forEach((s) => {
+ const el = document.createElement("div");
+ el.className = "example";
+ el.innerHTML =
+ '<span class="latin">' + s.latin + "</span>" +
+ '<span class="ar">' + s.ar + "</span>" +
+ '<span class="d">' + s.dialect + "</span>";
+ el.addEventListener("click", () => {
+ input.value = s.latin;
+ render(s.latin);
+ input.focus();
+ });
+ samplesEl.appendChild(el);
+ });
+ </script>
 </body>
 </html>

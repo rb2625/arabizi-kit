@@ -1,6 +1,6 @@
-# ArabiziKit — open-source Arabizi → Arabic-script NLP toolkit
+# ArabiziKit - open-source Arabizi -> Arabic-script NLP toolkit
 
-Transliterate **Arabizi** (Arabic written in Latin letters and digits — `2` for hamza/qaf, `3` for ʿayn, `7` for ḥāʾ, `5` for khāʾ…) into proper Arabic script, tag the dialect, and evaluate it all reproducibly.
+Transliterate **Arabizi** (Arabic written in Latin letters and digits - `2` for hamza/qaf, `3` for ʿayn, `7` for ḥāʾ, `5` for khāʾ...) into proper Arabic script, tag the dialect, and evaluate it all reproducibly.
 
 ```bash
 $ arabizikit "ana 3ayz 2akol"
@@ -8,12 +8,12 @@ $ arabizikit "ana 3ayz 2akol"
 
 $ arabizikit "shlonak ya 5al" --dialect
 شلونك يا خال
-dialect: gulf  confidence: 1.0
+dialect: gulf confidence: 1.0
 ```
 
 ## Why this project exists
 
-Arabizi is everywhere — WhatsApp, TikTok, X, Reddit — but the existing
+Arabizi is everywhere - WhatsApp, TikTok, X, Reddit - but the existing
 solutions are academic demos from a decade ago (NYU Abu Dhabi's transliteration
 demo, the Jordanian Arabizi-Transliteration Corpus, COLABA) or subroutines
 buried inside monolithic toolkits (CAMeL Tools). There is **no modern,
@@ -30,46 +30,37 @@ the corpus, benchmark, and paper plan live in-repo.
 ## Architecture
 
 ```
-                    ┌──────────────────────────────────────────────┐
-                    │                 arabizikit                    │
-                    └──────────────────────────────────────────────┘
-   Arabizi text ──► Lexicon lookup ──► Rule engine ──► Candidates ──► Ranking
-                     (exact match)    (phoneme scan)  (top-k list)   (bad-sequence
-                          │               │               │             penalties)
-                          │               │               │
-                          ▼               ▼               ▼
-                     dialect tag    context rules    hamza seating
-                     (per word)     (2→ق/ء, ay→اي/ي,   (ء→أ/إ/ؤ/ئ)
-                                     final a→ا/ة)
-                          │                              │
-                          ▼                              ▼
-                    dialect guesser ───────────► final text + evidence
-                          ▲
-                          │  (optional, needs API key)
-                    LLM disambiguation ─────► picks from top-k candidates
+Arabizi text
+ -> Lexicon lookup (exact match): dialect tag per word
+ -> Rule engine (phoneme scan): context rules (2 as qaf or hamza,
+ short-vowel elision, final a as taa marbuta or alef)
+ -> Candidates (top-k list): ranked with bad-sequence penalties
+ -> Hamza seating, clitic attachment
+ -> Final text and evidence
+ -> LLM disambiguation (optional): picks from the top-k candidates
 ```
 
 Key design decisions:
 
 - **Lexicon first, rules second.** Exact lexicon matches win (they carry
-  dialect evidence). Rules cover everything else and produce *ranked
-  candidates* instead of a single guess — ambiguity is surfaced, not hidden.
+ dialect evidence). Rules cover everything else and produce *ranked
+ candidates* instead of a single guess - ambiguity is surfaced, not hidden.
 - **Context rules resolve the easy cases.** Word-final `2` after a vowel is
-  almost always qaf (`tare2 → طريق`); word-initial `2` before a consonant
-  is either qaf or elided-alef (`2alb → قلب` vs `2ktob → اكتب`), so both are
-  produced and ranked.
-- **Short vowels are elided by default** (`3emel → عمل`, `nemshi → نمشي`),
-  matching how Arabs actually write Arabizi, with the full vowel as a
-  candidate alternative.
+ almost always qaf (`tare2 -> طريق`); word-initial `2` before a consonant
+ is either qaf or elided-alef (`2alb -> قلب` vs `2ktob -> اكتب`), so both are
+ produced and ranked.
+- **Short vowels are elided by default** (`3emel -> عمل`, `nemshi -> نمشي`),
+ matching how Arabs actually write Arabizi, with the full vowel as a
+ candidate alternative.
 - **Arabic clitics are handled**: `el` attaches as `ال`, `w` as `و`,
-  `3al` as `على ال`.
-- **Zero core dependencies** — pure standard library. The optional LLM mode
-  uses `urllib` (Anthropic API) so the package stays lightweight.
+ `3al` as `على ال`.
+- **Zero core dependencies** - pure standard library. The optional LLM mode
+ uses `urllib` (Anthropic API) so the package stays lightweight.
 
 ## Install
 
 ```bash
-uv sync            # dev environment (or: pip install -e .[dev])
+uv sync # dev environment (or: pip install -e .[dev])
 ```
 
 ## Usage
@@ -78,27 +69,27 @@ uv sync            # dev environment (or: pip install -e .[dev])
 from arabizikit import transliterate
 
 res = transliterate("ana 3ayz 2akol", top_k=3, with_dialect=True)
-print(res.text)          # أنا عايز آكل
-print(res.candidates)    # [('أنا عايز آكل', 0.0), ...]
-print(res.dialect)       # {'dialect': 'egyptian', 'confidence': 1.0, 'evidence': [...]}
+print(res.text) # أنا عايز آكل
+print(res.candidates) # [('أنا عايز آكل', 0.0), ...]
+print(res.dialect) # {'dialect': 'egyptian', 'confidence': 1.0, 'evidence': [...]}
 ```
 
 CLI:
 
 ```bash
 arabizikit "shu 3am 3emel el yom" --top-k 5 --dialect
-arabizikit "ya3ne shu" --llm                # LLM-assisted (needs ANTHROPIC_API_KEY)
-arabizikit eval                             # run the benchmark
-arabizikit eval --json                      # machine-readable report
-arabizikit normalize "مُحَمَّد ـ"             # orthographic normalisation
+arabizikit "ya3ne shu" --llm # LLM-assisted (needs ANTHROPIC_API_KEY)
+arabizikit eval # run the benchmark
+arabizikit eval --json # machine-readable report
+arabizikit normalize "مُحَمَّد ـ" # orthographic normalisation
 ```
 
 ## Web demo
 
-The demo runs entirely in the browser — zero backend, zero dependencies:
+The demo runs entirely in the browser - zero backend, zero dependencies:
 
 ```bash
-python scripts/build_web.py    # embeds the phoneme/lexicon tables into the JS engine
+python scripts/build_web.py # embeds the phoneme/lexicon tables into the JS engine
 # then open web/index.html
 ```
 
@@ -115,7 +106,7 @@ no new dependencies:
 ```bash
 arabizikit corpus harvest --subreddits Egypt arabs --pages 2
 arabizikit corpus filter
-arabizikit corpus annotate            # needs ANTHROPIC_API_KEY
+arabizikit corpus annotate # needs ANTHROPIC_API_KEY
 arabizikit corpus split
 ```
 
@@ -147,22 +138,22 @@ arabizikit eval
 ```
 
 Reports top-1 exact match, **hit@k** (is the reference among the ranked
-candidates — the metric the LLM mode builds on), CER, and WER, overall and
+candidates - the metric the LLM mode builds on), CER, and WER, overall and
 per dialect.
 
-> ⚠️ The current 33-sentence seed set is a **calibration set**: it shares
+> Note: The current 33-sentence seed set is a **calibration set**: it shares
 > distribution with the seed lexicon, so scores are an upper bound on the
 > hybrid pipeline. The real held-out corpus (social-media Arabizi collected
-> via the pipeline described in `paper/outline.md`) is the next milestone —
+> via the pipeline described in `paper/outline.md`) is the next milestone - 
 > see Roadmap.
 
 ## Roadmap
 
-- [x] **v0.1** — rule engine, seed lexicon (~120 words), dialect baseline, benchmark, CLI, browser demo, paper outline
+- [x] **v0.1** - rule engine, seed lexicon (~120 words), dialect baseline, benchmark, CLI, browser demo, paper outline
 - [x] **v0.2** - corpus pipeline built (harvest, filter, LLM annotation, stratified split); first held-out run pending an API key
-- [ ] **v0.3** — dialect classification beyond lexicon tags; fine-tuned reranker over top-k candidates
-- [ ] **v0.4** — LLM mode as a first-class API, npm/JS distribution
-- [ ] **v1.0** — arXiv paper + release on PyPI
+- [ ] **v0.3** - dialect classification beyond lexicon tags; fine-tuned reranker over top-k candidates
+- [ ] **v0.4** - LLM mode as a first-class API, npm/JS distribution
+- [ ] **v1.0** - arXiv paper + release on PyPI
 
 ## Contributing
 
