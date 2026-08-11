@@ -107,7 +107,40 @@ into the JS engine, and `tests/test_web.py` fails if the bundle drifts from
 the data (plus a Node syntax check). Python and browser engines produce
 byte-identical candidate rankings on the golden set.
 
+## Corpus pipeline (v0.2)
+
+Build a held-out evaluation set from real social-media Arabizi. Four stages,
+no new dependencies:
+
+```bash
+arabizikit corpus harvest --subreddits Egypt arabs --pages 2
+arabizikit corpus filter
+arabizikit corpus annotate            # needs ANTHROPIC_API_KEY
+arabizikit corpus split
+```
+
+Or the whole thing in one command:
+
+```bash
+arabizikit corpus run --subreddits Egypt arabs --pages 1
+```
+
+- harvest: pulls Reddit posts (OAuth when REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET are set; create a free script app at reddit.com/prefs/apps), one JSONL file per subreddit into corpus_data/raw/
+- filter: keeps Latin-script sentences that score as Arabizi (digit+letter markers, lexicon words), strips URLs, mentions, hashtags, and emoji, and splits posts into sentences
+- annotate: Claude renders Arabic script and a dialect tag per sentence; the rule engine top-1 is stored alongside for agreement, and a deterministic 10% sample is annotated twice to report inter-annotator agreement
+- split: stratified train/dev/test by dialect, written in benchmark format
+
+Score the held-out test set with:
+
+```bash
+arabizikit eval --data corpus_data/splits/test.json
+```
+
+corpus_data/ is gitignored: raw network content and API annotations are
+working data, not part of the repository.
+
 ## Benchmark
+
 
 ```bash
 arabizikit eval
@@ -126,7 +159,7 @@ per dialect.
 ## Roadmap
 
 - [x] **v0.1** — rule engine, seed lexicon (~120 words), dialect baseline, benchmark, CLI, browser demo, paper outline
-- [ ] **v0.2** — corpus collection pipeline (Reddit/TikTok/X/Youtube → LLM-assisted annotation) + first held-out split
+- [x] **v0.2** - corpus pipeline built (harvest, filter, LLM annotation, stratified split); first held-out run pending an API key
 - [ ] **v0.3** — dialect classification beyond lexicon tags; fine-tuned reranker over top-k candidates
 - [ ] **v0.4** — LLM mode as a first-class API, npm/JS distribution
 - [ ] **v1.0** — arXiv paper + release on PyPI
