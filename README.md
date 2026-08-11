@@ -2,6 +2,8 @@
 
 Transliterate **Arabizi** (Arabic written in Latin letters and digits - `2` for hamza/qaf, `3` for ʿayn, `7` for ḥāʾ, `5` for khāʾ...) into proper Arabic script, tag the dialect, and evaluate it all reproducibly.
 
+Try it live: **https://arabizi-kit.vercel.app** (browser demo with a dialect selector, powered by the same engine on npm).
+
 ```bash
 $ arabizikit "ana 3ayz 2akol"
 أنا عايز آكل
