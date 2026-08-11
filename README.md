@@ -91,6 +91,35 @@ arabizikit eval --json # machine-readable report
 arabizikit normalize "مُحَمَّد ـ" # orthographic normalisation
 ```
 
+## LLM mode (v0.5)
+
+For genuinely ambiguous input the engine can hand the top candidates to an
+LLM for the final call. Free by default: Groq's free tier needs no credit
+card, and the same code speaks OpenAI, Gemini, local Ollama, and Anthropic.
+
+As a library:
+
+```python
+from arabizikit import llm_transliterate
+
+result = llm_transliterate("ya3ne shu", provider="groq", model=None)
+print(result["arabic"])   # يعني شو
+print(result["dialect"])  # levantine
+```
+
+As a CLI:
+
+```bash
+arabizikit "ya3ne shu" --llm
+arabizikit "ya3ne shu" --llm --llm-provider ollama --llm-model llama3.2
+```
+
+Keys come from GROQ_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY,
+ANTHROPIC_API_KEY, or ARABIZIKIT_API_KEY (see arabizikit/llm.py). The same
+client powers the corpus annotation stage.
+
+## Web demo
+
 ## Web demo
 
 The demo runs entirely in the browser - zero backend, zero dependencies:
@@ -104,6 +133,11 @@ The tables are the single source of truth: `build_web.py` embeds them verbatim
 into the JS engine, and `tests/test_web.py` fails if the bundle drifts from
 the data (plus a Node syntax check). Python and browser engines produce
 byte-identical candidate rankings on the golden set.
+
+The same bundle ships as an npm package: `web/` has a package.json, type
+declarations, and a readme. `require("arabizikit")` and
+`window.ArabiziKit` expose the same `transliterate` / `tokenize` /
+`processWord` API, so one file covers browsers, bundlers, and Node.
 
 ## Corpus pipeline (v0.2)
 
@@ -268,6 +302,7 @@ top-3. Picking that reading is what the v0.4 learned layer does where the corpus
 - [x] **v0.2** - corpus pipeline built and run end to end: harvest, filter, LLM annotation on the free tier with inter-annotator agreement, stratified split; three external held-out sets plus the pipeline test set evaluated, results in Benchmark
 - [x] **v0.3** - Maghrebi rule coverage (9/ch/doubling/case conventions) and dialect hints; results in Benchmark
 - [x] **v0.4** - learned layer: dialect classifier, word reading table, language-model reranking; results in Benchmark
+- [x] **v0.5** - LLM mode as a first-class API, npm/JS distribution
 - [ ] **v1.0** - arXiv paper + release on PyPI
 
 ## Contributing

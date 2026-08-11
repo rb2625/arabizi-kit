@@ -9,8 +9,9 @@ Public API
 """
 
 from .dialect import guess_dialect
+from .disambiguate import llm_transliterate
 from .transliterate import Transliterator, transliterate
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
-__all__ = ["Transliterator", "__version__", "guess_dialect", "transliterate"]
+__all__ = ["Transliterator", "__version__", "guess_dialect", "llm_transliterate", "transliterate"]

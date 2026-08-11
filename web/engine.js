@@ -316,3 +316,8 @@
 
   global.ArabiziKit = { transliterate, tokenize, processWord };
 })(typeof window !== "undefined" ? window : globalThis);
+
+/* CommonJS export so the same file works as an npm package. */
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = global.ArabiziKit;
+}

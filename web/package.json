@@ -1,0 +1,27 @@
+{
+  "name": "arabizikit",
+  "version": "0.5.0",
+  "description": "Transliterate Arabizi (Romanized Arabic) to Arabic script in the browser or Node, with dialect tagging and ranked candidates.",
+  "main": "arabizikit.js",
+  "module": "arabizikit.js",
+  "types": "index.d.ts",
+  "files": [
+    "arabizikit.js",
+    "index.d.ts"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "arabizi",
+    "arabic",
+    "transliteration",
+    "dialect",
+    "nlp",
+    "naskh"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rb2625/arabizi-kit.git"
+  },
+  "homepage": "https://arabizi-kit.vercel.app"
+}

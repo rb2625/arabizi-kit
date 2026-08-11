@@ -62,6 +62,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--hint", metavar="DIALECT", default=None, help="assume a dialect convention (egyptian, levantine, gulf, maghrebi) for the ambiguous readings")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     parser.add_argument("--llm", action="store_true", help="LLM-assisted disambiguation (needs an LLM key; Groq free tier by default)")
+    parser.add_argument("--llm-provider", default="groq", help="LLM provider for --llm: groq (default), openai, gemini, ollama, anthropic")
+    parser.add_argument("--llm-model", default=None, help="LLM model for --llm (defaults to the provider default)")
     parser.add_argument("--eval", nargs="?", const="default", metavar="DATA", help="run the benchmark suite")
     parser.add_argument("--data", metavar="FILE", help="evaluate against a benchmark file (alias for --eval FILE)")
     parser.add_argument("--model", action="store_true", help="use the trained learned layer (dialect prediction, learned readings, reranking)")
@@ -303,7 +305,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.llm:
         try:
-            result = llm_transliterate(text)
+            result = llm_transliterate(text, provider=args.llm_provider, model=args.llm_model)
             print(json.dumps(result, ensure_ascii=False, indent=2))
         except (OSError, ValueError, RuntimeError) as exc:  # network / key / parse errors
             print(f"LLM mode failed: {exc}", file=sys.stderr)
