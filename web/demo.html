@@ -12,7 +12,7 @@
  <link rel="preconnect" href="https://fonts.googleapis.com" />
  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
- <link href="https://api.fontshare.com/v2/css?f[]=sentient@400,401,500,501,600,601&display=swap" rel="stylesheet" />
+ <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap" rel="stylesheet" />
  <style>
  :root {
   --paper: #eae6dc;
@@ -24,7 +24,7 @@
   --line-strong: rgba(34, 29, 23, .3);
   --clay: #a34a26;
   --clay-soft: rgba(163, 74, 38, .1);
-  --serif: "Sentient", Georgia, serif;
+  --serif: "Cormorant Garamond", Georgia, serif;
   --arabic: "Amiri", "Newsreader", serif;
   --mono: ui-monospace, "SF Mono", Consolas, monospace;
  }
@@ -33,7 +33,7 @@
  body {
   margin: 0; min-height: 100vh;
   background: linear-gradient(180deg, #f0ece2 0%, var(--paper) 260px);
-  color: var(--ink); font-family: var(--serif); font-size: 18px;
+  color: var(--ink); font-family: var(--serif); font-size: 19px; line-height: 1.55;
   -webkit-font-smoothing: antialiased;
  }
  ::selection { background: var(--clay-soft); }
@@ -46,7 +46,7 @@
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
   padding-bottom: 16px; border-bottom: 1px solid var(--line);
  }
- .wordmark { font-size: 24px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
+ .wordmark { font-size: 26px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
  .wordmark i { font-style: italic; color: var(--clay); font-weight: 500; }
  .nav { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
  .nav a.pill {
@@ -60,7 +60,7 @@
  /* hero: short */
  .hero { padding: 40px 0 30px; }
  .hero h1 {
-  font-size: clamp(36px, 6vw, 56px); line-height: 1.06; font-weight: 500;
+  font-size: clamp(42px, 6.6vw, 64px); line-height: 1.05; font-weight: 500; letter-spacing: -0.01em;
   letter-spacing: -0.015em; margin: 0 0 12px;
  }
  .hero h1 em { font-style: italic; color: var(--clay); }
