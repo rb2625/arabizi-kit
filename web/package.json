@@ -1,6 +1,6 @@
 {
   "name": "arabizikit",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Transliterate Arabizi (Romanized Arabic) to Arabic script in the browser or Node, with dialect tagging and ranked candidates.",
   "main": "arabizikit.js",
   "module": "arabizikit.js",

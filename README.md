@@ -303,13 +303,20 @@ top-3. Picking that reading is what the v0.4 learned layer does where the corpus
 - [x] **v0.3** - Maghrebi rule coverage (9/ch/doubling/case conventions) and dialect hints; results in Benchmark
 - [x] **v0.4** - learned layer: dialect classifier, word reading table, language-model reranking; results in Benchmark
 - [x] **v0.5** - LLM mode as a first-class API, npm/JS distribution
-- [ ] **v1.0** - arXiv paper + release on PyPI
+- [x] **v1.0** - paper draft (paper/outline.md), PyPI + npm release steps (RELEASE.md)
 
 ## Contributing
 
 Corpus contributions are the highest-value contribution: add real Arabizi
 sentences (with reference Arabic + dialect tag) to `data/benchmark.json` and
 run `arabizikit eval`. See `paper/outline.md` for the research framing.
+
+## Release
+
+PyPI and npm publishing is scripted in [RELEASE.md](RELEASE.md): build,
+verify, upload with a token, and tag. The wheel ships the rule data
+(phonemes and lexicon) and needs zero runtime dependencies. The trained
+model is built locally with `arabizikit model train`; it is not shipped.
 
 ## License
 
