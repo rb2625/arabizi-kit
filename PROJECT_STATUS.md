@@ -54,7 +54,7 @@ ignores (`a9ac301`, `315b317`).
 |---|---|
 | PyPI (pypi.org/project/arabizikit) | Published, HTTP 200 |
 | Demo (arabizi-kit.vercel.app) | Live, HTTP 200 |
-| npm (registry.npmjs.org/arabizikit) | Not published, blocked on npm 2FA policy |
+| npm (registry.npmjs.org/arabizikit) | Published, HTTP 200 |
 | GitHub | All commits pushed, tree clean |
 
 ## Data owned (corpus_data, 5.8 MB, gitignored)
@@ -78,11 +78,9 @@ ignores (`a9ac301`, `315b317`).
 
 ## What is left
 
-1. npm publish, blocked only by npm's 2FA policy. The package is done; a
-   project-local `.npmrc` token file is in place and gitignored.
-2. arXiv submission. The outline needs converting to LaTeX (`paper.tex`),
+1. arXiv submission. The outline needs converting to LaTeX (`paper.tex`),
    an account, and a few days of moderation.
-3. LinkedIn post, the agreed last step, only when everything above is done.
+2. LinkedIn post, the agreed last step, only when the paper is submitted.
 
 ## Verify any time
 

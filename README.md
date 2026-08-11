@@ -303,7 +303,7 @@ top-3. Picking that reading is what the v0.4 learned layer does where the corpus
 - [x] **v0.3** - Maghrebi rule coverage (9/ch/doubling/case conventions) and dialect hints; results in Benchmark
 - [x] **v0.4** - learned layer: dialect classifier, word reading table, language-model reranking; results in Benchmark
 - [x] **v0.5** - LLM mode as a first-class API, npm/JS distribution
-- [x] **v1.0** - paper draft (paper/outline.md), PyPI + npm release steps (RELEASE.md)
+- [x] **v1.0** - paper draft (paper/outline.md), published on PyPI and npm (1.0.0)
 
 ## Contributing
 
