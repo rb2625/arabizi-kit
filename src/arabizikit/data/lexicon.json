@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Seed bilingual lexicon of high-frequency Arabizi words with dialect tags. Exact-match lookups take priority over rule-based transliteration. Dialects: common, msa, gulf, egyptian, levantine, maghrebi. v0.3 adds a Maghrebi block covering the Moroccan Darija forms seen in the external held-out sets.",
   "entries": {
     "ana": { "ar": "أنا", "dialect": "common" },

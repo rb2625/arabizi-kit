@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Arabizi -> Arabic phoneme tables for arabizikit. Digraphs are tried longest-first before single letters. 'alternatives' lists are in priority order and are used to generate ranked candidate transliterations. v0.3 adds the Maghrebi conventions: ch reads as shin (French-influenced spelling, tch for the rare tsh reading), 9 reads as qaf in Morocco (sad in Egypt, dad as 9'), and 8 reads as ghayn or heh depending on the writer.",
   "digraphs": {
     "kh": "خ",

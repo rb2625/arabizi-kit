@@ -158,7 +158,7 @@ def main() -> int:
             ]
             path = OUT_DIR / f"{dialect}.json"
             payload = {
-                "version": "0.3.0",
+                "version": "1.0.0",
                 "description": f"classifier-only synthetic {dialect} text (LLM-generated)",
                 "entries": entries,
             }
@@ -189,7 +189,7 @@ def main() -> int:
                         break
             offset += len(chunk)
         path = OUT_DIR / f"{spec['name']}.json"
-        payload = {"version": "0.3.0", "description": f"classifier-only {spec['dialect']} text from {spec['dataset']}", "entries": entries}
+        payload = {"version": "1.0.0", "description": f"classifier-only {spec['dialect']} text from {spec['dataset']}", "entries": entries}
         path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"{spec['name']}: {len(entries)} sentences -> {path}")
 
