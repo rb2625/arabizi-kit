@@ -14,15 +14,15 @@
  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
  <style>
  :root {
-  --paper: #f6f2ea;
-  --card: #fffdf8;
-  --ink: #23201b;
-  --ink-soft: #6f695d;
-  --ink-faint: #a29b8c;
-  --line: rgba(35, 32, 27, .13);
-  --line-strong: rgba(35, 32, 27, .3);
-  --clay: #b4552d;
-  --clay-soft: rgba(180, 85, 45, .1);
+  --paper: #eae6dc;
+  --card: #faf8f2;
+  --ink: #221d17;
+  --ink-soft: #6d6557;
+  --ink-faint: #98907f;
+  --line: rgba(34, 29, 23, .14);
+  --line-strong: rgba(34, 29, 23, .3);
+  --clay: #a34a26;
+  --clay-soft: rgba(163, 74, 38, .1);
   --serif: "Newsreader", Georgia, serif;
   --arabic: "Amiri", "Newsreader", serif;
   --mono: ui-monospace, "SF Mono", Consolas, monospace;
@@ -31,164 +31,146 @@
  html { scroll-behavior: smooth; }
  body {
   margin: 0; min-height: 100vh;
-  background: radial-gradient(1200px 560px at 50% -8%, rgba(255, 255, 255, .7), transparent 62%), var(--paper);
-  color: var(--ink); font-family: var(--serif); font-size: 19px;
+  background: linear-gradient(180deg, #f0ece2 0%, var(--paper) 260px);
+  color: var(--ink); font-family: var(--serif); font-size: 18px;
   -webkit-font-smoothing: antialiased;
  }
  ::selection { background: var(--clay-soft); }
  a { color: var(--clay); text-decoration: none; }
  a:hover { text-decoration: underline; }
- .page { width: min(880px, calc(100% - 48px)); margin: 0 auto; padding: 40px 0 56px; }
+ .page { width: min(820px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 48px; }
 
- /* top bar */
+ /* header */
  header {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding-bottom: 18px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--line);
  }
- .wordmark { font-size: 25px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
+ .wordmark { font-size: 24px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
  .wordmark i { font-style: italic; color: var(--clay); font-weight: 500; }
- .nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+ .nav { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
  .nav a.pill {
-  font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft);
-  border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px;
+  font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
+  border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px;
   transition: .18s; white-space: nowrap;
  }
  .nav a.pill:hover { color: var(--clay); border-color: var(--clay); text-decoration: none; }
- .ver { font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); }
+ .ver { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
 
- /* hero */
- .hero { padding: 56px 0 44px; }
- .eyebrow {
-  font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
-  color: var(--ink-faint); margin: 0 0 16px;
- }
+ /* hero: short */
+ .hero { padding: 40px 0 30px; }
  .hero h1 {
-  font-size: clamp(42px, 7vw, 68px); line-height: 1.04; font-weight: 500;
-  letter-spacing: -0.015em; margin: 0 0 20px;
+  font-size: clamp(36px, 6vw, 56px); line-height: 1.06; font-weight: 500;
+  letter-spacing: -0.015em; margin: 0 0 12px;
  }
  .hero h1 em { font-style: italic; color: var(--clay); }
- .hero p { margin: 0 0 30px; max-width: 36em; color: var(--ink-soft); font-size: 18.5px; line-height: 1.62; }
- .stats { display: flex; gap: 34px; flex-wrap: wrap; padding-top: 26px; border-top: 1px solid var(--line); }
- .stat b { display: block; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
- .stat b small { font-size: 15px; color: var(--ink-faint); font-weight: 400; }
- .stat span { font-size: 13.5px; color: var(--ink-faint); font-style: italic; }
+ .hero p { margin: 0; max-width: 40em; color: var(--ink-soft); font-size: 17.5px; line-height: 1.6; }
 
- /* the tool */
+ /* the tool: the focus of the page */
  .tool {
-  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
-  box-shadow: 0 18px 44px -26px rgba(35, 32, 27, .35);
-  padding: 34px 34px 26px;
+  background: var(--card); border: 1px solid var(--line-strong); border-radius: 14px;
+  box-shadow: 0 22px 50px -30px rgba(34, 29, 23, .5);
+  padding: 30px 30px 24px;
  }
- .tool-label {
-  font-size: 11.5px; letter-spacing: .2em; text-transform: uppercase;
-  color: var(--ink-faint); margin: 0 0 14px;
+ .step { font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 10px; }
+ .step b { color: var(--clay); font-weight: 600; }
+
+ .field {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 1px solid var(--line-strong); border-radius: 10px;
+  padding: 8px 12px; transition: border-color .2s, box-shadow .2s;
  }
- .field { display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid var(--line-strong); padding: 4px 2px 12px; transition: border-color .2s; }
- .field:focus-within { border-color: var(--clay); }
- .field .prompt { font-style: italic; color: var(--clay); font-size: 24px; }
+ .field:focus-within { border-color: var(--clay); box-shadow: 0 0 0 3px var(--clay-soft); }
+ .field .prompt { font-style: italic; color: var(--clay); font-size: 20px; }
  .field input {
   flex: 1; min-width: 0; background: transparent; border: 0; outline: 0;
-  font-family: var(--serif); font-size: 25px; color: var(--ink); caret-color: var(--clay);
+  font-family: var(--serif); font-size: 22px; color: var(--ink); caret-color: var(--clay); padding: 4px 0;
  }
  .field input::placeholder { color: var(--ink-faint); font-style: italic; }
  .hint {
   border: 0; background: transparent; outline: 0; cursor: pointer;
-  font-family: var(--serif); font-style: italic; font-size: 14.5px; color: var(--ink-soft);
-  padding: 3px 2px; white-space: nowrap; transition: color .2s;
+  font-family: var(--serif); font-style: italic; font-size: 13.5px; color: var(--ink-soft);
+  padding: 2px; white-space: nowrap; transition: color .2s;
  }
  .hint:hover { color: var(--clay); }
  .hint option { font-style: normal; }
  .copy {
   border: 0; background: transparent; cursor: pointer;
-  font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--ink-soft);
-  padding: 4px 2px; white-space: nowrap; transition: color .2s;
+  font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--ink-soft);
+  padding: 2px; white-space: nowrap; transition: color .2s;
  }
  .copy:hover { color: var(--clay); }
+ .field-note { font-size: 13px; font-style: italic; color: var(--ink-faint); margin: 8px 2px 0; }
 
- .output { padding: 38px 2px 8px; }
+ .output { padding: 26px 2px 6px; }
  .out-ar {
-  font-family: var(--arabic); font-size: clamp(52px, 8.6vw, 88px); line-height: 1.35;
+  font-family: var(--arabic); font-size: clamp(44px, 7.4vw, 72px); line-height: 1.35;
   direction: rtl; text-align: left; color: var(--ink);
   min-height: 1.35em; word-break: break-word;
  }
  .out-ar:empty::before { content: "..."; color: var(--ink-faint); font-size: .4em; }
  .out-ar.flash { animation: rise .3s cubic-bezier(.2, .7, .3, 1); }
  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
- .out-meta { margin-top: 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
- .dialect { display: flex; align-items: center; gap: 10px; font-size: 16px; font-style: italic; color: var(--ink-soft); }
+ .out-meta { margin-top: 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 14px; }
+ .dialect { display: flex; align-items: center; gap: 9px; font-size: 15px; font-style: italic; color: var(--ink-soft); }
  .dialect .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--clay); }
  .dialect.off .dot { background: var(--ink-faint); }
- .dialect .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: .16em; font-style: normal; color: var(--ink-faint); }
- .chips-wrap { width: 100%; margin-top: 6px; }
- .chips-label { font-size: 11px; text-transform: uppercase; letter-spacing: .16em; color: var(--ink-faint); margin: 0 0 8px; }
- .chips { display: flex; gap: 10px; flex-wrap: wrap; }
+ .dialect .dlabel { font-size: 10.5px; text-transform: uppercase; letter-spacing: .16em; font-style: normal; color: var(--ink-faint); }
+ .chips-wrap { width: 100%; }
+ .chips-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .16em; color: var(--ink-faint); margin: 0 0 7px; }
+ .chips { display: flex; gap: 9px; flex-wrap: wrap; }
  .chip {
   background: transparent; border: 1px solid var(--line); border-radius: 999px;
-  font-family: var(--arabic); font-size: 17px; color: var(--ink-soft);
-  padding: 6px 15px; cursor: pointer; transition: .18s;
+  font-family: var(--arabic); font-size: 16px; color: var(--ink-soft);
+  padding: 5px 14px; cursor: pointer; transition: .18s;
  }
  .chip:hover { color: var(--clay); border-color: var(--clay); }
 
- /* how it works */
- .how { padding: 56px 0 8px; }
- .sec-head h2 { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 22px; font-weight: 500; }
- .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
- .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px 22px; }
- .card .n { font-family: var(--mono); font-size: 12px; color: var(--clay); }
- .card h3 { font-size: 19px; font-weight: 600; margin: 8px 0 8px; }
- .card p { font-size: 15.5px; line-height: 1.58; color: var(--ink-soft); margin: 0; }
- .card code { font-family: var(--mono); font-size: 13px; color: var(--ink); background: rgba(35,32,27,.05); padding: 1px 5px; border-radius: 4px; }
+ /* sections */
+ .sec { padding: 44px 0 6px; }
+ .sec-head h2 { font-size: 11.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 16px; font-weight: 500; }
+ .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+ .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px 20px; }
+ .card h3 { font-size: 17px; font-weight: 600; margin: 0 0 6px; }
+ .card p { font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); margin: 0; }
+ .card code { font-family: var(--mono); font-size: 12.5px; background: rgba(34,29,23,.06); padding: 1px 5px; border-radius: 4px; }
 
- /* examples */
- .examples { padding: 48px 0 8px; }
- .examples-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
- .examples-head span { font-size: 13.5px; font-style: italic; color: var(--ink-faint); }
- .egrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; }
- .example { display: flex; align-items: baseline; gap: 16px; padding: 14px 2px; border-bottom: 1px solid var(--line); cursor: pointer; transition: border-color .15s; }
+ .egrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+ .example { display: flex; align-items: baseline; gap: 14px; padding: 13px 2px; border-bottom: 1px solid var(--line); cursor: pointer; transition: border-color .15s; }
  .example:hover { border-color: var(--line-strong); }
- .example .latin { font-size: 17px; transition: color .15s; }
+ .example .latin { font-size: 16px; transition: color .15s; }
  .example:hover .latin { color: var(--clay); }
- .example .ar { font-family: var(--arabic); font-size: 24px; direction: rtl; margin-left: auto; }
- .example .d { font-size: 10.5px; text-transform: uppercase; letter-spacing: .13em; color: var(--ink-faint); min-width: 64px; text-align: right; }
+ .example .ar { font-family: var(--arabic); font-size: 22px; direction: rtl; margin-left: auto; }
+ .example .d { font-size: 10px; text-transform: uppercase; letter-spacing: .13em; color: var(--ink-faint); min-width: 60px; text-align: right; }
 
- /* install */
- .install { padding: 48px 0 8px; }
- .install-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
- .install-block { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
- .install-block .ib-head {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 10px 16px; border-bottom: 1px solid var(--line);
- }
- .install-block .ib-head span { font-size: 11px; text-transform: uppercase; letter-spacing: .16em; color: var(--ink-faint); }
- .ib-copy { border: 0; background: transparent; cursor: pointer; font-family: var(--serif); font-style: italic; font-size: 13.5px; color: var(--ink-soft); padding: 2px 0; }
+ .install-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+ .install-block { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+ .install-block .ib-head { display: flex; justify-content: space-between; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--line); }
+ .install-block .ib-head span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .16em; color: var(--ink-faint); }
+ .ib-copy { border: 0; background: transparent; cursor: pointer; font-family: var(--serif); font-style: italic; font-size: 13px; color: var(--ink-soft); padding: 2px 0; }
  .ib-copy:hover { color: var(--clay); }
- .install-block pre { margin: 0; padding: 15px 16px; font-family: var(--mono); font-size: 14.5px; color: var(--ink); overflow-x: auto; }
+ .install-block pre { margin: 0; padding: 13px 14px; font-family: var(--mono); font-size: 14px; color: var(--ink); overflow-x: auto; }
 
- /* benchmark + footer */
- .bench { padding: 46px 0 10px; }
- .bench table { width: 100%; border-collapse: collapse; font-size: 15.5px; }
- .bench th {
-  font-size: 11px; text-transform: uppercase; letter-spacing: .16em; color: var(--ink-faint);
-  text-align: left; font-weight: 500; padding: 10px 12px; border-bottom: 1px solid var(--line-strong);
- }
- .bench td { padding: 12px; border-bottom: 1px solid var(--line); color: var(--ink-soft); }
+ .bench table { width: 100%; border-collapse: collapse; font-size: 15px; }
+ .bench th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .16em; color: var(--ink-faint); text-align: left; font-weight: 500; padding: 9px 12px; border-bottom: 1px solid var(--line-strong); }
+ .bench td { padding: 11px 12px; border-bottom: 1px solid var(--line); color: var(--ink-soft); }
  .bench td b { color: var(--ink); font-weight: 600; }
- .bench .note { font-size: 13.5px; font-style: italic; color: var(--ink-faint); margin: 14px 2px 0; }
- .foot {
-  margin-top: 46px; padding-top: 18px; border-top: 1px solid var(--line);
-  display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
-  font-size: 13.5px; font-style: italic; color: var(--ink-faint);
- }
- .foot b { font-weight: 500; color: var(--ink-soft); }
- .foot a { color: var(--ink-soft); }
- .foot a:hover { color: var(--clay); }
+ .bench .note { font-size: 13px; font-style: italic; color: var(--ink-faint); margin: 12px 2px 0; }
 
- @media (max-width: 760px) {
+ /* footer band: a touch of depth, not dark */
+ footer {
+  margin-top: 48px; background: rgba(255, 255, 255, .35); border: 1px solid var(--line); border-radius: 12px;
+  padding: 18px 22px; display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  font-size: 13px; font-style: italic; color: var(--ink-faint);
+ }
+ footer b { font-weight: 500; color: var(--ink-soft); }
+ footer a { color: var(--ink-soft); }
+ footer a:hover { color: var(--clay); }
+
+ @media (max-width: 700px) {
   .cards, .egrid, .install-row { grid-template-columns: 1fr; }
-  .page { width: calc(100% - 36px); padding: 32px 0 40px; }
-  .hero { padding: 42px 0 34px; }
-  .tool { padding: 26px 20px 20px; }
-  .chips { width: 100%; }
+  .page { width: calc(100% - 30px); padding: 26px 0 36px; }
+  .hero { padding: 32px 0 24px; }
+  .tool { padding: 24px 18px 18px; }
   .example .d { display: none; }
  }
  @media (prefers-reduced-motion: reduce) { .out-ar.flash { animation: none; } html { scroll-behavior: auto; } }
@@ -207,27 +189,19 @@
   </header>
 
   <section class="hero">
-   <p class="eyebrow">An open-source transliteration toolkit</p>
    <h1>Type Arabizi, <em>read Arabic.</em></h1>
    <p>
-    "ana 3ayz 2akol", "shlonak ya 5al", "shu 3am 3emel" - the way millions of
-    people actually write Arabic online, given the script it deserves.
-    Dialect-aware, ranked, benchmarked. Runs right here in your browser.
+    "ezayak ya 7abiby" becomes إزيك يا حبيبي. Type the way you write on
+    WhatsApp, and get proper Arabic script, with the right dialect, instantly.
    </p>
-   <div class="stats">
-    <div class="stat"><b>5</b><span>dialect groups tagged</span></div>
-    <div class="stat"><b>1,489</b><span>held-out sentences, never trained on</span></div>
-    <div class="stat"><b>0.376</b><span>exact@1 on Egyptian, rules alone</span></div>
-    <div class="stat"><b>0.171</b><span>inter-annotator agreement (honest)</span></div>
-   </div>
   </section>
 
   <section class="tool" aria-label="Transliteration tool">
-   <p class="tool-label">Try it - type your own Arabizi</p>
+   <p class="step"><b>1</b> &nbsp;Type Arabizi here</p>
    <div class="field">
     <span class="prompt">&rarr;</span>
     <input id="input" type="text" autocomplete="off" spellcheck="false"
-     placeholder="ana 3ayz 2akol" dir="ltr" />
+     placeholder="ezayak ya 7abiby" dir="ltr" />
     <select id="hint" class="hint" aria-label="Dialect hint" title="Assume a dialect for the ambiguous readings">
      <option value="">auto</option>
      <option value="egyptian">egyptian</option>
@@ -237,54 +211,48 @@
     </select>
     <button class="copy" id="copy" title="Copy the Arabic" aria-label="Copy the Arabic">copy</button>
    </div>
+   <p class="field-note">It updates as you type. No button needed.</p>
+
    <div class="output">
+    <p class="step" style="margin-top:0"><b>2</b> &nbsp;Read the Arabic</p>
     <div class="out-ar" id="output"></div>
     <div class="out-meta">
      <span class="dialect" id="dialect-box"><span class="dot"></span><span class="dlabel">dialect</span><span id="dialect">-</span></span>
      <div class="chips-wrap" id="chips-wrap" hidden>
-      <p class="chips-label">Alternative readings</p>
+      <p class="chips-label">Other possible readings</p>
       <div class="chips" id="chips"></div>
      </div>
     </div>
    </div>
   </section>
 
-  <section class="how">
-   <div class="sec-head"><h2>How it works</h2></div>
+  <section class="sec">
+   <div class="sec-head"><h2>What makes it different</h2></div>
    <div class="cards">
     <div class="card">
-     <span class="n">01</span>
-     <h3>Rules, first</h3>
-     <p>A hand-built engine maps Arabizi to Arabic letters, following the
-     regional conventions (<code>9</code> is qaf in Morocco, sad in Egypt),
-     and returns a <b>ranked list of readings</b> instead of one guess.</p>
+     <h3>It knows dialects</h3>
+     <p>9 is qaf in Morocco but sad in Egypt. The engine follows the
+     regional way of writing and tags the dialect for you.</p>
     </div>
     <div class="card">
-     <span class="n">02</span>
-     <h3>A learned layer</h3>
-     <p>Trained on hundreds of real social-media sentences, a small local
-     model - dialect classifier, word table, character language model -
-     reranks candidates toward natural Arabic. No GPU, no API, no setup.</p>
+     <h3>It shows you options</h3>
+     <p>Arabizi is ambiguous, so you get the best reading plus the other
+     likely ones, not one blind guess.</p>
     </div>
     <div class="card">
-     <span class="n">03</span>
-     <h3>Optional LLM picker</h3>
-     <p>For the truly ambiguous cases, the top candidates go to an LLM
-     (Groq free tier by default) that picks the intended reading. The LLM
-     chooses; it never guesses from scratch.</p>
+     <h3>It is open and honest</h3>
+     <p>Free, MIT licensed, zero dependencies, and every benchmark number
+     reproduces with one command.</p>
     </div>
    </div>
   </section>
 
-  <section class="examples">
-   <div class="examples-head">
-    <h2 class="sec-head">Examples</h2>
-    <span>tap one to try it</span>
-   </div>
+  <section class="sec">
+   <div class="sec-head"><h2>Try an example</h2></div>
    <div class="egrid" id="samples"></div>
   </section>
 
-  <section class="install">
+  <section class="sec">
    <div class="sec-head"><h2>Install</h2></div>
    <div class="install-row">
     <div class="install-block">
@@ -298,7 +266,7 @@
    </div>
   </section>
 
-  <section class="bench">
+  <section class="sec bench">
    <div class="sec-head"><h2>The numbers, honestly</h2></div>
    <table>
     <tr><th>Set</th><th>Exact@1</th><th>Hit@3</th><th>CER</th><th></th></tr>
@@ -308,11 +276,11 @@
     <tr><td><b>Moroccan Darija</b> (600 held-out)</td><td><b>0.088</b></td><td>0.115</td><td>0.180</td><td>with dialect hint</td></tr>
     <tr><td><b>Pipeline test</b> (49)</td><td><b>0.061</b></td><td>0.102</td><td>0.226</td><td>learned layer</td></tr>
    </table>
-   <p class="note">Every number reproduces with one command: <code style="font-family:var(--mono);font-size:13px">arabizikit eval --model</code></p>
+   <p class="note">Every number reproduces with one command: <code style="font-family:var(--mono);font-size:12.5px">arabizikit eval --model</code></p>
   </section>
 
-  <footer class="foot">
-   <span>MIT licensed - <b>zero runtime dependencies</b></span>
+  <footer>
+   <span>MIT licensed &middot; <b>zero runtime dependencies</b></span>
    <span>
     by <a href="https://github.com/rb2625" target="_blank" rel="noreferrer">Muhammed Rabeeh Mattath</a> |
     <a href="https://github.com/rb2625/arabizi-kit" target="_blank" rel="noreferrer">source</a> |
@@ -324,7 +292,6 @@
 
  <script src="arabizikit.js"></script>
  <script>
-  const VERSION = "1.0.0";
   const SAMPLES = [
    { latin: "ana 3ayz 2akol", dialect: "egyptian", ar: "أنا عايز آكل" },
    { latin: "shlonak ya 5al", dialect: "gulf", ar: "شلونك يا خال" },
@@ -351,7 +318,17 @@
 
   function render(text) {
    const hint = hintEl.value || null;
-   const res = ArabiziKit.transliterate(text, { topK: 4, withDialect: true, dialectHint: hint });
+   const first = ArabiziKit.transliterate(text, { topK: 4, withDialect: true, dialectHint: hint });
+   // Auto-apply the detected dialect when it changes the engine's readings
+   // (Maghrebi and Gulf only, mirroring the learned layer's effective hints).
+   let effective = hint;
+   if (!hint) {
+    const g = first.dialect;
+    if (g && (g.dialect === "maghrebi" || g.dialect === "gulf") && (g.confidence || 0) >= 0.5) {
+     effective = g.dialect;
+    }
+   }
+   const res = effective === hint ? first : ArabiziKit.transliterate(text, { topK: 4, withDialect: true, dialectHint: effective });
    output.textContent = res.text;
    output.classList.remove("flash");
    void output.offsetWidth;
@@ -389,8 +366,8 @@
 
   input.addEventListener("input", () => render(input.value));
   hintEl.addEventListener("change", () => render(input.value));
-  render("ana 3ayz 2akol");
-  input.value = "ana 3ayz 2akol";
+  render("ezayak ya 7abiby");
+  input.value = "ezayak ya 7abiby";
 
   copyBtn.addEventListener("click", async () => {
    try {
