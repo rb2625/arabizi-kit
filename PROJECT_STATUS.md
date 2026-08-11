@@ -78,8 +78,9 @@ ignores (`a9ac301`, `315b317`).
 
 ## What is left
 
-1. arXiv submission. The outline needs converting to LaTeX (`paper.tex`),
-   an account, and a few days of moderation.
+1. arXiv submission. The LaTeX paper is drafted (`paper/paper.tex`,
+   compile with XeLaTeX); submission needs an account and a few days of
+   moderation.
 2. LinkedIn post, the agreed last step, only when the paper is submitted.
 
 ## Verify any time
