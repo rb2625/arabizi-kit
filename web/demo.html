@@ -156,9 +156,11 @@
  .bench td { padding: 11px 12px; border-bottom: 1px solid var(--line); color: var(--ink-soft); }
  .bench td b { color: var(--ink); font-weight: 600; }
  .bench .note { font-size: 13px; font-style: italic; color: var(--ink-faint); margin: 12px 2px 0; }
- .bench-lede { font-size: 15px; line-height: 1.6; color: var(--ink-soft); margin: 0 0 14px; max-width: 46em; }
+ .bench-grid { display: grid; grid-template-columns: 1.65fr 1fr; gap: 26px; align-items: start; }
+ .bench-table .note { margin-top: 14px; }
+ .bench-lede { font-size: 15px; line-height: 1.6; color: var(--ink-soft); margin: 0 0 16px; }
  .bench-lede b { color: var(--ink); }
- .legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+ .legend { display: grid; gap: 10px; }
  .legend-item { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
  .legend-item b { display: block; font-family: var(--mono); font-size: 13px; color: var(--ink); margin-bottom: 3px; }
  .legend-item span { font-size: 13.5px; font-style: italic; color: var(--ink-soft); line-height: 1.45; }
@@ -175,6 +177,7 @@
 
  @media (max-width: 700px) {
   .cards, .egrid, .install-row, .legend { grid-template-columns: 1fr; }
+  .bench-grid { grid-template-columns: 1fr; gap: 18px; }
   .page { width: calc(100% - 30px); padding: 26px 0 36px; }
   .hero { padding: 32px 0 24px; }
   .tool { padding: 24px 18px 18px; }
@@ -275,12 +278,8 @@
 
   <section class="sec bench">
    <div class="sec-head"><h2>The numbers, honestly</h2></div>
-   <p class="bench-lede">
-    These are the results on real sentences the system has never seen before.
-    Three simple meanings: <b>exact@1</b> is how often the right answer came
-    first. <b>hit@3</b> is how often it was among the three options shown.
-    <b>CER</b> is how close the answer is, letter by letter, where 0 is perfect.
-   </p>
+   <div class="bench-grid">
+   <div class="bench-table">
    <table>
     <tr><th>Set</th><th>Exact@1</th><th>Hit@3</th><th>CER</th><th></th></tr>
     <tr><td><b>Calibration</b> (33 hand-written)</td><td><b>1.000</b></td><td>1.000</td><td>0.000</td><td></td></tr>
@@ -290,10 +289,17 @@
     <tr><td><b>Pipeline test</b> (49)</td><td><b>0.061</b></td><td>0.102</td><td>0.226</td><td>learned layer</td></tr>
    </table>
    <p class="note">Every number reproduces with one command: <code style="font-family:var(--mono);font-size:12.5px">arabizikit eval --model</code></p>
-   <div class="legend">
-    <div class="legend-item"><b>exact@1</b><span>The right Arabic came first.</span></div>
-    <div class="legend-item"><b>hit@3</b><span>The right Arabic was one of the three shown.</span></div>
-    <div class="legend-item"><b>CER</b><span>How close it was, per letter. 0 is perfect.</span></div>
+   </div>
+   <div class="bench-side">
+    <p class="bench-lede">
+     These are the results on real sentences the system has never seen before.
+    </p>
+    <div class="legend">
+     <div class="legend-item"><b>exact@1</b><span>The right Arabic came first.</span></div>
+     <div class="legend-item"><b>hit@3</b><span>The right Arabic was one of the three shown.</span></div>
+     <div class="legend-item"><b>CER</b><span>How close it was, per letter. 0 is perfect.</span></div>
+    </div>
+   </div>
    </div>
   </section>
 
