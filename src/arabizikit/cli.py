@@ -9,6 +9,8 @@ Examples::
     arabizikit eval
     arabizikit eval --json
     arabizikit eval --data corpus_data/splits/test.json
+    arabizikit eval --data corpus_data/splits/test.json --model   # learned layer
+    arabizikit model train                                        # build the learned layer
     arabizikit normalize "مرحباً 3alam"
 
 Corpus pipeline (v0.2)::
@@ -34,6 +36,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from . import benchmark as bench
 from .corpus import annotate as corpus_annotate
@@ -43,6 +46,7 @@ from .corpus.filter import filter_raw
 from .corpus.harvest import harvest, harvest_hf
 from .corpus.split import import_parallel, split_annotated
 from .disambiguate import llm_transliterate
+from .model import Model
 from .normalize import normalize
 from .transliterate import Transliterator
 
@@ -60,6 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--llm", action="store_true", help="LLM-assisted disambiguation (needs an LLM key; Groq free tier by default)")
     parser.add_argument("--eval", nargs="?", const="default", metavar="DATA", help="run the benchmark suite")
     parser.add_argument("--data", metavar="FILE", help="evaluate against a benchmark file (alias for --eval FILE)")
+    parser.add_argument("--model", action="store_true", help="use the trained learned layer (dialect prediction, learned readings, reranking)")
     parser.add_argument("--normalize", nargs="+", metavar="TEXT", help="normalise Arabic text")
     return parser
 
@@ -193,6 +198,66 @@ def corpus_main(argv: list[str]) -> int:
     return 1
 
 
+def model_main(argv: list[str]) -> int:
+    """Subcommands for the trained learned layer."""
+    parser = argparse.ArgumentParser(prog="arabizikit model", description="learned layer (v0.3)")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p_train = sub.add_parser("train", help="train the dialect classifier, reading table, and reranker")
+    p_train.add_argument("--extra", nargs="*", default=None, help="extra benchmark files to train on")
+    p_train.add_argument("--lambda-weight", type=float, default=8.0, dest="lambda_weight", help="language-model weight in the rerank (tuned on the dev split)")
+    p_train.add_argument("--out", default=None, help="where to save the model (default corpus_data/model/model.json)")
+
+    sub.add_parser("status", help="show whether a trained model exists")
+
+    args = parser.parse_args(argv)
+
+    if args.cmd == "train":
+        sources = list(corpus_config.MODEL_SOURCES)
+        if args.extra:
+            sources += [Path(s) for s in args.extra]
+        existing = [s for s in sources if s.exists()]
+        if not existing:
+            print("no training sources found; run the corpus pipeline first", file=sys.stderr)
+            return 1
+        model = Model.train(existing, rerank_lambda=args.lambda_weight)
+        out = Path(args.out) if args.out else corpus_config.MODEL_PATH
+        model.save(out)
+        report = {
+            "sources": [str(s) for s in existing],
+            "out": str(out),
+            "dialect_classes": len(model.dialect.classes),
+            "learned_words": len(model.words.words),
+            "lm_vocab": len(model.lm.vocab),
+            "rerank_lambda": model.rerank_lambda,
+        }
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.cmd == "status":
+        path = corpus_config.MODEL_PATH
+        if not path.exists():
+            print(json.dumps({"trained": False, "path": str(path)}, indent=2))
+            return 0
+        model = Model.load(path)
+        print(
+            json.dumps(
+                {
+                    "trained": True,
+                    "path": str(path),
+                    "dialect_classes": len(model.dialect.classes),
+                    "learned_words": len(model.words.words),
+                    "lm_vocab": len(model.lm.vocab),
+                    "rerank_lambda": model.rerank_lambda,
+                },
+                indent=2,
+            )
+        )
+        return 0
+
+    return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     # Windows consoles default to cp1252 and cannot print Arabic; force UTF-8.
     for stream in (sys.stdout, sys.stderr):
@@ -205,6 +270,8 @@ def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] == "corpus":
         return corpus_main(argv[1:])
+    if argv and argv[0] == "model":
+        return model_main(argv[1:])
 
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -216,7 +283,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.eval or args.data:
         data_path = args.data if args.data else (None if args.eval == "default" else args.eval)
-        report = bench.run_benchmark(data_path=data_path, top_k=max(args.top_k, 1))
+        report = bench.run_benchmark(data_path=data_path, top_k=max(args.top_k, 1), use_model=args.model)
         if args.json:
             print(json.dumps(report, ensure_ascii=False, indent=2))
         else:
@@ -225,7 +292,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # `arabizikit eval` (bare word, no dashes) is friendlier than --eval
     if args.text == ["eval"]:
-        report = bench.run_benchmark(data_path=None, top_k=max(args.top_k, 1))
+        report = bench.run_benchmark(data_path=None, top_k=max(args.top_k, 1), use_model=args.model)
         print(json.dumps(report, ensure_ascii=False, indent=2) if args.json else bench.format_report(report))
         return 0
 
@@ -243,7 +310,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         return 0
 
-    tr = Transliterator()
+    model = None
+    if args.model:
+        if not corpus_config.MODEL_PATH.exists():
+            print(f"no trained model at {corpus_config.MODEL_PATH}; run `arabizikit model train` first", file=sys.stderr)
+            return 1
+        model = Model.load(corpus_config.MODEL_PATH)
+    tr = Transliterator(model=model)
     res = tr.transliterate(text, top_k=max(args.top_k, 1), with_dialect=args.dialect, dialect_hint=args.hint)
 
     if args.json:

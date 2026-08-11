@@ -156,8 +156,8 @@ measures the rules against human-level renderings:
 
 The near-zero exact score is the point, not a bug: the rules emit literal
 letter mappings (mettabbal -> متتاببال) while natural renderings differ in
-spelling, morphology, and word choice. That gap is what the v0.4 reranker
-closes by learning from the annotated corpus.
+spelling, morphology, and word choice. The v0.4 learned layer (next
+section) closes part of that gap by learning from the annotated corpus.
 
 Score a pipeline-split held-out test set with:
 
@@ -168,6 +168,58 @@ arabizikit eval --data corpus_data/splits/test.json
 corpus_data/ is gitignored: raw network content, API annotations, and
 imported third-party sets are working data, not part of the repository.
 The import commands rebuild the external sets in one call.
+
+## Learned layer (v0.4)
+
+A small, dependency-free model trained from the corpus replaces the hand
+tuning in three places: dialect detection, word readings, and candidate
+ranking. Build it with:
+
+```bash
+arabizikit model train
+arabizikit model status
+python scripts/build_classifier_data.py            # real dialect text (Maghrebi, Egyptian)
+python scripts/build_classifier_data.py --synthetic  # LLM-generated Levantine (needs GROQ_API_KEY)
+```
+
+Then opt in per call: `arabizikit "bach n9ra" --model` or
+`arabizikit eval --data corpus_data/splits/test.json --model`.
+
+Three components, all pure Python:
+
+- dialect classifier: Naive Bayes over word tokens and Arabizi code markers
+  (digits, digraphs), trained on a class-balanced sample so large sources do
+  not swamp minority dialects. It supplies the dialect hint automatically,
+  but only for dialects that change the engine's default readings (Maghrebi
+  9 -> qaf and single doubled consonants, Gulf 8 -> ghayn); Egyptian and
+  Levantine match the engine defaults, so no hint is emitted there.
+- word reading table: arabizi word -> observed Arabic renderings with
+  frequencies, learned from parallel pairs with article-aware alignment
+  (el etnein -> الاثنين). Known words emit their observed readings instead
+  of the letter rules.
+- character language model: a smoothed trigram over the corpus references,
+  reranking each word's candidates toward readings that look like natural
+  Arabic (weight tuned on the dev split).
+
+Training uses the calibration benchmark, the pipeline train/dev splits, and
+public dialect text; the held-out test and external sets stay out of
+training. Results, all with the same metrics (exact@1 / hit@3 / CER):
+
+| set | rules, no hint | rules, oracle hint | learned layer |
+| --- | --- | --- | --- |
+| pipeline dev | 0.021 / 0.021 / 0.291 | 0.021 / 0.021 / 0.291 | 0.354 / 0.542 / 0.097 |
+| pipeline test | 0.000 / 0.000 / 0.299 | 0.000 / 0.000 / 0.299 | 0.061 / 0.102 / 0.226 |
+| Egyptian (external) | 0.376 / 0.526 / 0.236 | 0.376 / 0.526 / 0.236 | 0.348 / 0.502 / 0.248 |
+| Levantine (external) | 0.296 / 0.429 / 0.076 | 0.296 / 0.429 / 0.076 | 0.270 / 0.360 / 0.096 |
+| Moroccan Darija (external) | 0.035 / 0.057 / 0.235 | 0.088 / 0.115 / 0.180 | 0.053 / 0.080 / 0.207 |
+
+The honest reading: the learned layer is opt-in and learns from the
+corpus's human-style renderings, so it wins big where the corpus is
+representative (dev exact up 17x, pipeline-test CER down a quarter, Darija
+above the no-hint baseline because the classifier auto-selects the Maghrebi
+convention) and gives back a couple of points on the external sets whose
+gold style differs from the corpus. The rules remain the default for
+arbitrary text; `--model` is the data-driven mode.
 
 ## Benchmark
 
@@ -195,8 +247,8 @@ Real held-out numbers come from three external parallel sets (imported via
 The evaluation is dialect-conditioned: each row's dialect is passed to the
 transliterator as a hint, because the conventions genuinely disagree (9 is
 qaf in Morocco and sad in Egypt, doubled consonants are gemination in
-Darija and kept as doubles in the Levant). This is the oracle setting of
-the v0.4 classifier, which will supply the same hint from the text itself.
+Darija and kept as doubles in the Levant). The v0.4 learned layer
+supplies the same hint from the text itself (see the Learned layer section).
 
 The v0.3 rule work targets exactly the conventions that previously produced
 nothing on Darija: 9 as qaf, ch as shin, doubled consonants written once
@@ -208,15 +260,14 @@ from 0.290 to 0.180, while Egyptian and Levantine held or improved.
 What remains is honest and documented: short-vowel elision and the ay/ya
 distinction are per-word, so a sentence that needs two conventions at once
 (n9ra -> نقرا needs qaf plus a written final alif) still lands outside the
-top-3. Picking that reading is the reranker's job in v0.4.
+top-3. Picking that reading is what the v0.4 learned layer does where the corpus has evidence.
 
 ## Roadmap
 
 - [x] **v0.1** - rule engine, seed lexicon, dialect baseline, benchmark, CLI, browser demo, paper outline
 - [x] **v0.2** - corpus pipeline built and run end to end: harvest, filter, LLM annotation on the free tier with inter-annotator agreement, stratified split; three external held-out sets plus the pipeline test set evaluated, results in Benchmark
 - [x] **v0.3** - Maghrebi rule coverage (9/ch/doubling/case conventions) and dialect hints; results in Benchmark
-- [ ] **v0.4** - automatic dialect classifier and a reranker over the top-k candidates (the manual hint becomes automatic)
-- [ ] **v0.5** - LLM mode as a first-class API, npm/JS distribution
+- [x] **v0.4** - learned layer: dialect classifier, word reading table, language-model reranking; results in Benchmark
 - [ ] **v1.0** - arXiv paper + release on PyPI
 
 ## Contributing

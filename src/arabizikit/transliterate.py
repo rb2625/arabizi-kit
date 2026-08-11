@@ -29,6 +29,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .dialect import guess_dialect, pattern_hints
+from .model import Model
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 
@@ -62,8 +63,9 @@ def _tokenize(text: str):
 
 
 class Transliterator:
-    def __init__(self, data_dir: str | Path = DATA_DIR):
+    def __init__(self, data_dir: str | Path = DATA_DIR, model: Model | None = None):
         data_dir = Path(data_dir)
+        self.model = model
         self._phonemes = json.loads((data_dir / "phonemes.json").read_text(encoding="utf-8"))
         raw_lexicon = json.loads((data_dir / "lexicon.json").read_text(encoding="utf-8"))
         self.lexicon = {k.lower(): v for k, v in raw_lexicon["entries"].items()}
@@ -80,6 +82,9 @@ class Transliterator:
 
     # ------------------------------------------------------------------ API
     def transliterate(self, text: str, top_k: int = 1, with_dialect: bool = False, dialect_hint: str | None = None) -> Result:
+        if dialect_hint is None and self.model is not None:
+            # The learned classifier replaces the manual hint: no oracle needed.
+            dialect_hint = self.model.hint_for(text)
         tokens = list(_tokenize(text))
         words: list[dict] = []
         for kind, tok in tokens:
@@ -88,6 +93,15 @@ class Transliterator:
             else:
                 words.append({"kind": kind, "raw": tok})
         words = self._attach_pass(words)
+        if self.model is not None:
+            # The language model reranks each word's candidates so the
+            # top-ranked candidate always matches the top-1 output; this
+            # keeps Result.text and candidates[0] consistent.
+            lam = self.model.rerank_lambda
+            lm = self.model.lm
+            for w in words:
+                if w["kind"] == "word" and len(w["candidates"]) > 1:
+                    w["candidates"] = sorted(w["candidates"], key=lambda c: c[1] + lam * lm.penalty(c[0]))
 
         parts: list[str] = []
         evidence: list[dict] = []
@@ -102,7 +116,7 @@ class Transliterator:
                 evidence.extend(w.get("evidence", []))
         text_out = "".join(parts)
 
-        candidates = self._sentence_candidates(words, top_k=max(top_k, 1))
+        candidates = self._sentence_candidates(words, top_k=max(top_k, 1), model=self.model)
         word_tokens = [w for w in words if w["kind"] == "word"]
 
         dialect = None
@@ -115,21 +129,29 @@ class Transliterator:
 
     # ------------------------------------------------------- sentence level
     @staticmethod
-    def _sentence_candidates(words: list[dict], top_k: int) -> list[tuple[str, float]]:
-        """Best full-sentence strings from the per-word candidate lists."""
+    def _sentence_candidates(words: list[dict], top_k: int, model: Model | None = None) -> list[tuple[str, float]]:
+        """Best full-sentence strings from the per-word candidate lists.
+
+        With a learned model, more per-word candidates are kept and the
+        character language model reranks the sentences: the final score is
+        the word-score sum plus the LM's plausibility penalty. Without a
+        model the ranking is the pure heuristic, unchanged.
+        """
         word_tokens = [w for w in words if w["kind"] == "word"]
+        per_word = top_k if model is None else max(top_k, 3)
         combos: list[tuple[list[str], float]] = [([], 0.0)]
         for w in word_tokens:
-            cands = w["candidates"][:top_k]
+            cands = w["candidates"][:per_word]
             combos = [(parts + [ar], score + s) for parts, score in combos for ar, s in cands]
-            if len(combos) > top_k * 6:
-                combos = sorted(combos, key=lambda c: c[1])[: top_k * 6]
+            cap = max(top_k * 6, 24)
+            if len(combos) > cap:
+                combos = sorted(combos, key=lambda c: c[1])[:cap]
         if not word_tokens:
             return []
+        scored = [(" ".join(parts), score) for parts, score in combos]
         seen: set[str] = set()
         out: list[tuple[str, float]] = []
-        for parts, score in sorted(combos, key=lambda c: c[1]):  # stable: product order breaks ties
-            sentence = " ".join(parts)
+        for sentence, score in sorted(scored, key=lambda c: c[1]):  # stable: product order breaks ties
             if sentence in seen:
                 continue
             seen.add(sentence)
@@ -147,6 +169,10 @@ class Transliterator:
             return {"kind": "article", "raw": low}
         if low in self._contractions:
             return {"kind": "contraction", "raw": low, **self._contractions[low]}
+        if self.model is not None:
+            learned = self.model.words.readings(low)
+            if learned:
+                return {"kind": "word", "raw": low, "candidates": learned, "evidence": [], "learned": True}
         if low in self.lexicon:
             entry = self.lexicon[low]
             return {
@@ -350,14 +376,16 @@ class Transliterator:
 _transliterator: Transliterator | None = None
 
 
-def transliterate(text: str, top_k: int = 1, with_dialect: bool = False, dialect_hint: str | None = None) -> Result:
+def transliterate(text: str, top_k: int = 1, with_dialect: bool = False, dialect_hint: str | None = None, model: Model | None = None) -> Result:
     """Transliterate an Arabizi string to Arabic script (convenience API).
 
     dialect_hint picks a regional convention for the ambiguous digit
     readings ("maghrebi" reads 9 as qaf, for example). Without it the
     global defaults apply and the ambiguity stays in the candidate list.
+    Pass a trained ``model`` to replace the manual hint with the learned
+    dialect classifier and rerank candidates with the language model.
     """
     global _transliterator
-    if _transliterator is None:
-        _transliterator = Transliterator()
+    if _transliterator is None or _transliterator.model is not model:
+        _transliterator = Transliterator(model=model)
     return _transliterator.transliterate(text, top_k=top_k, with_dialect=with_dialect, dialect_hint=dialect_hint)

@@ -38,6 +38,20 @@ MAX_WORDS = 40
 # as a blanket override. Ollama needs no key.
 ANNOTATION_PROVIDER = os.environ.get("ARABIZIKIT_PROVIDER", "groq")
 ANNOTATION_MODEL = os.environ.get("ARABIZIKIT_MODEL") or None  # None = provider default
+
+# Learned layer (v0.3): the trained model lives in the working data dir and
+# is built with `arabizikit model train` from the calibration benchmark plus
+# the pipeline train/dev splits (never the held-out sets).
+MODEL_DIR = CORPUS_DIR / "model"
+MODEL_PATH = MODEL_DIR / "model.json"
+MODEL_SOURCES = [
+    Path(__file__).resolve().parents[3] / "data" / "benchmark.json",
+    SPLITS_DIR / "train.json",
+    SPLITS_DIR / "dev.json",
+    CORPUS_DIR / "classifier" / "maghrebi.json",
+    CORPUS_DIR / "classifier" / "egyptian.json",
+    CORPUS_DIR / "classifier" / "levantine.json",
+]
 ANNOTATION_BATCH = 5  # keep requests small so free-tier per-minute token limits don't bite
 ANNOTATION_RETRIES = 4
 ANNOTATION_TIMEOUT = 90

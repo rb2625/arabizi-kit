@@ -23,6 +23,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from .corpus import config as corpus_config
+from .model import Model
 from .normalize import normalize_eval, normalized_tokens
 from .transliterate import Transliterator
 
@@ -46,14 +48,29 @@ def word_levenshtein(a: list[str], b: list[str]) -> int:
     return levenshtein(a, b)
 
 
-def run_benchmark(data_path: str | Path | None = None, top_k: int = 3, use_dialect_hint: bool = True) -> dict:
+def run_benchmark(
+    data_path: str | Path | None = None,
+    top_k: int = 3,
+    use_dialect_hint: bool = True,
+    use_model: bool = False,
+) -> dict:
     data_path = Path(data_path) if data_path else DEFAULT_DATA
     entries = json.loads(data_path.read_text(encoding="utf-8"))["entries"]
-    tr = Transliterator()
+
+    model = None
+    if use_model:
+        if not corpus_config.MODEL_PATH.exists():
+            raise FileNotFoundError(
+                f"no trained model at {corpus_config.MODEL_PATH}; run `arabizikit model train` first"
+            )
+        model = Model.load(corpus_config.MODEL_PATH)
+    tr = Transliterator(model=model)
 
     rows: list[dict] = []
     for e in entries:
-        hint = e.get("dialect") or None if use_dialect_hint else None
+        # With the model, the learned classifier supplies the dialect hint
+        # and the language model reranks; the oracle tag is not used.
+        hint = None if use_model else (e.get("dialect") or None if use_dialect_hint else None)
         res = tr.transliterate(e["arabizi"], top_k=top_k, dialect_hint=hint)
         preds = [normalize_eval(ar) for ar, _ in res.candidates]
         ref = normalize_eval(e["reference"])
@@ -87,7 +104,7 @@ def run_benchmark(data_path: str | Path | None = None, top_k: int = 3, use_diale
 
     overall = aggregate(rows)
     by_dialect = {d: aggregate([r for r in rows if r["dialect"] == d]) for d in sorted({r["dialect"] for r in rows})}
-    return {"overall": overall, "by_dialect": by_dialect, "rows": rows}
+    return {"overall": overall, "by_dialect": by_dialect, "rows": rows, "mode": "rules+model" if use_model else "rules"}
 
 
 def format_report(report: dict) -> str:

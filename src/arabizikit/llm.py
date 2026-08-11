@@ -103,6 +103,7 @@ def chat_completion(
     messages: list[dict],
     max_tokens: int = 2048,
     timeout: int = 90,
+    json_mode: bool | None = None,
 ) -> str:
     """One chat request. Returns the assistant's content as a string."""
     spec = PROVIDERS.get(provider)
@@ -137,7 +138,7 @@ def chat_completion(
         "max_tokens": max_tokens,
         "messages": [{"role": "system", "content": system}] + messages,
     }
-    if spec.get("json_mode"):
+    if spec.get("json_mode") if json_mode is None else json_mode:
         payload["response_format"] = {"type": "json_object"}
     headers = {"content-type": "application/json"}
     if key:
