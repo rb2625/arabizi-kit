@@ -10,6 +10,12 @@ Metrics (all computed on orthographically normalised forms):
 Results are aggregated overall and per dialect so regressions are visible
 when the corpus grows. ``arabizikit eval`` prints the table and writes the
 JSON report to stdout with ``--json``.
+
+Dialect-conditioned evaluation: each entry's dialect is passed to the
+transliterator as a hint, so a Maghrebi row reads 9 as qaf while an
+Egyptian row reads it as sad. This is the oracle setting of the v0.3
+dialect classifier: the candidate reranker will supply the same hint
+from the text itself.
 """
 
 from __future__ import annotations
@@ -40,14 +46,15 @@ def word_levenshtein(a: list[str], b: list[str]) -> int:
     return levenshtein(a, b)
 
 
-def run_benchmark(data_path: str | Path | None = None, top_k: int = 3) -> dict:
+def run_benchmark(data_path: str | Path | None = None, top_k: int = 3, use_dialect_hint: bool = True) -> dict:
     data_path = Path(data_path) if data_path else DEFAULT_DATA
     entries = json.loads(data_path.read_text(encoding="utf-8"))["entries"]
     tr = Transliterator()
 
     rows: list[dict] = []
     for e in entries:
-        res = tr.transliterate(e["arabizi"], top_k=top_k)
+        hint = e.get("dialect") or None if use_dialect_hint else None
+        res = tr.transliterate(e["arabizi"], top_k=top_k, dialect_hint=hint)
         preds = [normalize_eval(ar) for ar, _ in res.candidates]
         ref = normalize_eval(e["reference"])
         ref_tokens = normalized_tokens(ref)

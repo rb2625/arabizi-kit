@@ -1,13 +1,13 @@
 {
-  "version": "0.1.0",
-  "description": "Arabizi -> Arabic phoneme tables for arabizikit. Digraphs are tried longest-first before single letters. 'alternatives' lists are in priority order and are used to generate ranked candidate transliterations.",
+  "version": "0.3.0",
+  "description": "Arabizi -> Arabic phoneme tables for arabizikit. Digraphs are tried longest-first before single letters. 'alternatives' lists are in priority order and are used to generate ranked candidate transliterations. v0.3 adds the Maghrebi conventions: ch reads as shin (French-influenced spelling, tch for the rare tsh reading), 9 reads as qaf in Morocco (sad in Egypt, dad as 9'), and 8 reads as ghayn or heh depending on the writer.",
   "digraphs": {
     "kh": "خ",
     "gh": "غ",
     "sh": "ش",
     "th": "ث",
     "dh": "ذ",
-    "ch": "تش",
+    "ch": "ش",
     "ee": "ي",
     "ii": "ي",
     "oo": "و",
@@ -15,6 +15,9 @@
     "aa": "ا",
     "ou": "و",
     "iy": "ي"
+  },
+  "digraph_alternatives": {
+    "ch": ["تش"]
   },
   "digits": {
     "2": {
@@ -26,8 +29,8 @@
     "5": { "primary": "خ", "alternatives": [] },
     "6": { "primary": "ط", "alternatives": [] },
     "7": { "primary": "ح", "alternatives": [] },
-    "8": { "primary": "ق", "alternatives": ["غ"], "note": "8 is qaf in the Egyptian convention; 8' is ghayn." },
-    "9": { "primary": "ص", "alternatives": [] },
+    "8": { "primary": "ق", "alternatives": ["غ", "ه"], "dialect_variants": { "maghrebi": { "primary": "ه", "alternatives": ["ق", "غ"] }, "gulf": { "primary": "غ", "alternatives": ["ق", "ه"] } }, "note": "8 is qaf in the Egyptian convention, ghayn in the Gulf, and heh in some Moroccan writing (n8ar -> نهار). 8' is ghayn." },
+    "9": { "primary": "ص", "alternatives": ["ق", "ض"], "dialect_variants": { "maghrebi": { "primary": "ق", "alternatives": ["ص", "ض"] } }, "note": "9 is sad in the Egyptian convention (9ba7 -> صباح), qaf in Moroccan Darija (yb9aw -> يبقاو), and dad as 9' (ra9'e -> راضي). A dialect hint (transliterate(..., dialect_hint=...)) picks the regional reading; without one, sad stays the global default." },
     "4": { "primary": "ذ", "alternatives": [] }
   },
   "letters": {
@@ -58,6 +61,10 @@
     "y": { "primary": "ي", "alternatives": [] },
     "z": { "primary": "ز", "alternatives": ["ذ"] }
   },
+  "case_rules": {
+    "T": { "primary": "ط", "alternatives": ["ت"], "note": "The Moroccan convention uses capitals for emphatic readings: T for ta (Tab3an -> طبعا), S for sad (9Sdti -> قصدتي)." },
+    "S": { "primary": "ص", "alternatives": ["س"] }
+  },
   "context_rules": [
     {
       "id": "final_2_after_vowel_is_qaf",
@@ -79,8 +86,8 @@
       "match": "a",
       "when": "word_final",
       "primary": "ة",
-      "alternatives": ["ا"],
-      "note": "7elwa -> حلوة (taa marbuta) is the default; hada -> هذا (alif) is the alternative, and the lexicon overrides the top ambiguous words."
+      "alternatives": ["ا", "ى"],
+      "note": "7elwa -> حلوة (taa marbuta) is the default; hada -> هذا (alif) is the alternative, and the lexicon overrides the top ambiguous words. Ya (ى) covers the Maghrebi -a/-aa spelling (b9a -> بقى)."
     },
     {
       "id": "final_i_is_ya",

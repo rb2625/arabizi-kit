@@ -72,12 +72,19 @@ res = transliterate("ana 3ayz 2akol", top_k=3, with_dialect=True)
 print(res.text) # أنا عايز آكل
 print(res.candidates) # [('أنا عايز آكل', 0.0), ...]
 print(res.dialect) # {'dialect': 'egyptian', 'confidence': 1.0, 'evidence': [...]}
+
+# A dialect hint picks the regional conventions: 9 is qaf in Morocco,
+# sad in Egypt, and the doubled consonants are written once (Darija
+# gemination) or kept (Levant).
+res = transliterate("bach n9ra lktab", dialect_hint="maghrebi")
+print(res.text) # باش نقرا لكتاب
 ```
 
 CLI:
 
 ```bash
 arabizikit "shu 3am 3emel el yom" --top-k 5 --dialect
+arabizikit "bach n9ra lktab" --hint maghrebi # assume a dialect convention
 arabizikit "ya3ne shu" --llm # LLM-assisted (needs ANTHROPIC_API_KEY)
 arabizikit eval # run the benchmark
 arabizikit eval --json # machine-readable report
@@ -164,22 +171,35 @@ Real held-out numbers come from three external parallel sets (imported via
 
 | set | n | exact | hit@3 | CER |
 | --- | --- | --- | --- | --- |
-| Egyptian (arbml/Arabizi_Transliteration) | 500 | 0.366 | 0.510 | 0.243 |
-| Levantine (akhanafer/arabic-to-arabizi) | 389 | 0.296 | 0.427 | 0.076 |
-| Moroccan Darija (elkababi2/Darija-Text-Ar-Arabizi) | 600 | 0.013 | 0.023 | 0.290 |
+| Egyptian (arbml/Arabizi_Transliteration) | 500 | 0.376 | 0.526 | 0.236 |
+| Levantine (akhanafer/arabic-to-arabizi) | 389 | 0.296 | 0.429 | 0.076 |
+| Moroccan Darija (elkababi2/Darija-Text-Ar-Arabizi) | 600 | 0.088 | 0.115 | 0.180 |
 
-The honest read: the rule engine generalizes to Egyptian and Levantine
-without training (about a third exact, most errors within one or two
-letters), and fails on Moroccan Darija, whose French-influenced conventions
-(9 for qaf, ch/gh digraphs, doubled consonants) are outside the current
-rules. That failure is the point of the corpus: it is the roadmap.
+The evaluation is dialect-conditioned: each row's dialect is passed to the
+transliterator as a hint, because the conventions genuinely disagree (9 is
+qaf in Morocco and sad in Egypt, doubled consonants are gemination in
+Darija and kept as doubles in the Levant). This is the oracle setting of
+the v0.4 classifier, which will supply the same hint from the text itself.
+
+The v0.3 rule work targets exactly the conventions that previously produced
+nothing on Darija: 9 as qaf, ch as shin, doubled consonants written once
+(bzzaf -> بزاف), emphatic capitals (T -> ط, S -> ص), the assimilated
+definite article (jjaya -> الجاية), and a Maghrebi lexicon block. Darija
+exact@1 rose from 0.013 to 0.088, hit@3 from 0.023 to 0.115, and CER fell
+from 0.290 to 0.180, while Egyptian and Levantine held or improved.
+
+What remains is honest and documented: short-vowel elision and the ay/ya
+distinction are per-word, so a sentence that needs two conventions at once
+(n9ra -> نقرا needs qaf plus a written final alif) still lands outside the
+top-3. Picking that reading is the reranker's job in v0.4.
 
 ## Roadmap
 
-- [x] **v0.1** - rule engine, seed lexicon (~120 words), dialect baseline, benchmark, CLI, browser demo, paper outline
+- [x] **v0.1** - rule engine, seed lexicon, dialect baseline, benchmark, CLI, browser demo, paper outline
 - [x] **v0.2** - corpus pipeline built (harvest, filter, LLM annotation, stratified split); three external held-out sets evaluated, results in Benchmark
-- [ ] **v0.3** - dialect classification beyond lexicon tags; fine-tuned reranker over top-k candidates
-- [ ] **v0.4** - LLM mode as a first-class API, npm/JS distribution
+- [x] **v0.3** - Maghrebi rule coverage (9/ch/doubling/case conventions) and dialect hints; results in Benchmark
+- [ ] **v0.4** - automatic dialect classifier and a reranker over the top-k candidates (the manual hint becomes automatic)
+- [ ] **v0.5** - LLM mode as a first-class API, npm/JS distribution
 - [ ] **v1.0** - arXiv paper + release on PyPI
 
 ## Contributing

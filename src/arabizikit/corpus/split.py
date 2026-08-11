@@ -6,7 +6,9 @@ so the held-out test set can be scored with:
 
 import_parallel converts a parallel Arabizi/Arabic dataset (for example
 arbml/Arabizi_Transliteration on Hugging Face, which ships gold references)
-into a benchmark file for instant external evaluation.
+into a benchmark file for instant external evaluation. Known datasets are
+tagged with their dialect so the eval report groups rows correctly; pass
+--dialect to override or tag an unknown dataset.
 """
 
 from __future__ import annotations
@@ -17,6 +19,12 @@ from pathlib import Path
 
 from . import config
 from .harvest import fetch_hf_rows, resolve_split
+
+KNOWN_DIALECTS = {
+    "arbml/Arabizi_Transliteration": "egyptian",
+    "akhanafer/arabic-to-arabizi": "levantine",
+    "elkababi2/Darija-Text-Ar-Arabizi": "maghrebi",
+}
 
 
 def load_annotated(path: str | Path) -> list[dict]:
@@ -90,15 +98,18 @@ def import_parallel(
     config_name: str | None = None,
     split: str | None = None,
     limit: int | None = None,
+    dialect: str | None = None,
     out_path: str | Path | None = None,
 ) -> dict:
     """Convert a parallel Arabizi/Arabic dataset into a benchmark file.
 
-    Rows without usable values in either field are skipped.
+    Rows without usable values in either field are skipped. The dialect
+    defaults from KNOWN_DIALECTS and can be overridden explicitly.
     """
     out_path = Path(out_path or config.EXTERNAL_DIR / f"{dataset.split('/')[-1]}.json")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     config_name, split = resolve_split(dataset, config_name, split)
+    dialect = (dialect or KNOWN_DIALECTS.get(dataset) or "").strip().lower()
 
     entries = []
     offset = 0
@@ -117,7 +128,7 @@ def import_parallel(
                     "id": f"ext-{dataset.split('/')[-1]}-{len(entries):05d}",
                     "arabizi": str(arabizi),
                     "reference": str(arabic),
-                    "dialect": "",
+                    "dialect": dialect,
                     "note": f"external: {dataset}",
                 }
             )
@@ -131,4 +142,4 @@ def import_parallel(
         "entries": entries,
     }
     out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    return {"n": len(entries), "out": str(out_path)}
+    return {"n": len(entries), "dialect": dialect, "out": str(out_path)}

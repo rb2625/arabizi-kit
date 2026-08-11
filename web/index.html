@@ -65,6 +65,13 @@
  font-family: var(--serif); font-size: 25px; color: var(--ink); caret-color: var(--clay);
  }
  .field input::placeholder { color: var(--ink-faint); font-style: italic; }
+ .hint {
+ border: 0; background: transparent; outline: 0; cursor: pointer;
+ font-family: var(--serif); font-style: italic; font-size: 14.5px; color: var(--ink-soft);
+ padding: 3px 2px; white-space: nowrap; transition: color .2s;
+ }
+ .hint:hover { color: var(--clay); }
+ .hint option { font-style: normal; }
  .copy {
  border: 0; background: transparent; cursor: pointer;
  font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--ink-soft);
@@ -148,6 +155,13 @@
  
  <input id="input" type="text" autocomplete="off" spellcheck="false"
  placeholder="ana 3ayz 2akol" dir="ltr" />
+ <select id="hint" class="hint" aria-label="Dialect hint" title="Assume a dialect for the ambiguous readings">
+ <option value="">auto</option>
+ <option value="egyptian">egyptian</option>
+ <option value="levantine">levantine</option>
+ <option value="gulf">gulf</option>
+ <option value="maghrebi">maghrebi</option>
+ </select>
  <button class="copy" id="copy" title="Copy the Arabic" aria-label="Copy the Arabic">copy</button>
  </section>
 
@@ -169,7 +183,7 @@
 
  <footer class="foot">
  <span><b>33</b> benchmark cases | exact@1 <b>1.000</b> | hit@3 <b>1.000</b></span>
- <span>v0.1.0 - by <a href="https://github.com/rb2625" target="_blank" rel="noreferrer">Muhammed Rabeeh Mattath</a> | <a href="https://github.com/rb2625/arabizi-kit" target="_blank" rel="noreferrer">github</a></span>
+ <span>v0.3.0 - by <a href="https://github.com/rb2625" target="_blank" rel="noreferrer">Muhammed Rabeeh Mattath</a> | <a href="https://github.com/rb2625/arabizi-kit" target="_blank" rel="noreferrer">github</a></span>
  </footer>
  </div>
 
@@ -179,7 +193,7 @@
  { latin: "ana 3ayz 2akol", dialect: "egyptian", ar: "أنا عايز آكل" },
  { latin: "shlonak ya 5al", dialect: "gulf", ar: "شلونك يا خال" },
  { latin: "shu 3am 3emel el yom", dialect: "levantine", ar: "شو عم عمل اليوم" },
- { latin: "wacha kolshi mzyan", dialect: "maghrebi", ar: "واش كلشي مزيان" },
+ { latin: "homa mkhbbyin chi 7aja", dialect: "maghrebi", ar: "هوما مخبيين شي حاجة" },
  { latin: "yalla nro7 3al 7ay", dialect: "gulf", ar: "يلا نروح على الحي" },
  { latin: "hatha maqal mumtaz", dialect: "msa", ar: "هذا مقال ممتاز" },
  ];
@@ -190,16 +204,22 @@
  const chipsEl = document.getElementById("chips");
  const samplesEl = document.getElementById("samples");
  const copyBtn = document.getElementById("copy");
+ const hintEl = document.getElementById("hint");
 
  function render(text) {
- const res = ArabiziKit.transliterate(text, { topK: 4, withDialect: true });
+ const hint = hintEl.value || null;
+ const res = ArabiziKit.transliterate(text, { topK: 4, withDialect: true, dialectHint: hint });
  output.textContent = res.text;
  output.classList.remove("flash");
  void output.offsetWidth;
  output.classList.add("flash");
 
+ if (hint) {
+ dialectEl.textContent = hint + ", assumed";
+ } else {
  const d = res.dialect ? res.dialect.dialect : "unknown";
  dialectEl.textContent = d + (res.dialect && res.dialect.confidence ? ", confident" : "");
+ }
 
  chipsEl.innerHTML = "";
  res.candidates.slice(1).forEach((c, i) => {
@@ -213,6 +233,7 @@
  }
 
  input.addEventListener("input", () => render(input.value));
+ hintEl.addEventListener("change", () => render(input.value));
  render("ana 3ayz 2akol");
  input.value = "ana 3ayz 2akol";
 

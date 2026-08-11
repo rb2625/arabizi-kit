@@ -1,6 +1,6 @@
 """Core Arabizi -> Arabic transliteration engine.
 
-Design (v0.1, hybrid):
+Design (v0.3, hybrid):
 
 1. **Lexicon first** — exact matches against a curated bilingual lexicon win
    outright (they carry dialect evidence and no ambiguity).
@@ -9,7 +9,12 @@ Design (v0.1, hybrid):
    Ambiguous positions (2 -> hamza/qaf, t -> ta/taa, a -> alif/taa-marbuta,
    ay -> alif+ya / ya, short vowels elided or written) are expanded into
    candidates and ranked with small orthographic-plausibility penalties.
-3. **Post-processing** — hamza seating (ء -> أ/إ/ؤ/ئ), taa-marbuta
+3. **Maghrebi conventions** (v0.3) — ch reads as shin, 9 as qaf (sad in
+   Egypt, dad as 9'), doubled consonants mark gemination and are written
+   once (bzzaf -> بزاف), word-initial doubling can be the assimilated
+   definite article (jjaya -> الجاية), and capital T/S mark emphatic
+   readings (Tab3an -> طبعا, 9Sdti -> قصدتي).
+4. **Post-processing** — hamza seating (ء -> أ/إ/ؤ/ئ), taa-marbuta
    alternates, and Arabic clitic attachment (el -> ال, w -> و, 3al -> على ال).
 
 The candidate list (top-k) is what the optional LLM disambiguator and the
@@ -65,19 +70,21 @@ class Transliterator:
         self.digraphs = sorted(self._phonemes["digraphs"], key=len, reverse=True)
         self.digits = self._phonemes["digits"]
         self.letters = self._phonemes["letters"]
+        self.case_rules = self._phonemes.get("case_rules", {})
         self.bad_sequences = self._phonemes.get("bad_sequences", [])
         self._context = {r["id"]: r for r in self._phonemes.get("context_rules", [])}
         self._articles = {"el", "al", "il", "l"}
         self._contractions = {"3al": {"prefix": "على ال", "fallback": "على"}}
         self._conj = {"w": "و"}
+        self._prepositions = {"ب", "ف", "ك", "ل", "د", "و"}
 
     # ------------------------------------------------------------------ API
-    def transliterate(self, text: str, top_k: int = 1, with_dialect: bool = False) -> Result:
+    def transliterate(self, text: str, top_k: int = 1, with_dialect: bool = False, dialect_hint: str | None = None) -> Result:
         tokens = list(_tokenize(text))
         words: list[dict] = []
         for kind, tok in tokens:
             if kind == "latin":
-                words.append(self._process_word(tok.lower()))
+                words.append(self._process_word(tok, dialect_hint))
             else:
                 words.append({"kind": kind, "raw": tok})
         words = self._attach_pass(words)
@@ -132,22 +139,23 @@ class Transliterator:
         return out
 
     # ------------------------------------------------------------ word level
-    def _process_word(self, word: str) -> dict:
-        if word in self._conj:
-            return {"kind": "conj", "raw": word, "attach": self._conj[word]}
-        if word in self._articles:
-            return {"kind": "article", "raw": word}
-        if word in self._contractions:
-            return {"kind": "contraction", "raw": word, **self._contractions[word]}
-        if word in self.lexicon:
-            entry = self.lexicon[word]
+    def _process_word(self, word: str, dialect_hint: str | None = None) -> dict:
+        low = word.lower()
+        if low in self._conj:
+            return {"kind": "conj", "raw": low, "attach": self._conj[low]}
+        if low in self._articles:
+            return {"kind": "article", "raw": low}
+        if low in self._contractions:
+            return {"kind": "contraction", "raw": low, **self._contractions[low]}
+        if low in self.lexicon:
+            entry = self.lexicon[low]
             return {
                 "kind": "word",
-                "raw": word,
+                "raw": low,
                 "candidates": [(entry["ar"], 0.0)],
-                "evidence": [{"arabizi": word, "ar": entry["ar"], "dialect": entry["dialect"]}],
+                "evidence": [{"arabizi": low, "ar": entry["ar"], "dialect": entry["dialect"]}],
             }
-        return {"kind": "word", "raw": word, "candidates": self._rule_candidates(word), "evidence": []}
+        return {"kind": "word", "raw": low, "candidates": self._rule_candidates(word, dialect_hint=dialect_hint), "evidence": []}
 
     def _attach_pass(self, words: list[dict]) -> list[dict]:
         out: list[dict] = []
@@ -177,8 +185,8 @@ class Transliterator:
         return out
 
     # -------------------------------------------------------------- rules
-    def _rule_candidates(self, word: str, max_candidates: int = 8) -> list[tuple[str, float]]:
-        segments = self._scan(word)
+    def _rule_candidates(self, word: str, max_candidates: int = 8, dialect_hint: str | None = None) -> list[tuple[str, float]]:
+        segments = self._scan(word, dialect_hint)
         results = [""]
         for seg in segments:
             opts = seg["options"]
@@ -201,54 +209,106 @@ class Transliterator:
         scored.sort()
         return [(ar, round(score, 6)) for score, ar in scored[: max(max_candidates, 1)]]
 
-    def _scan(self, word: str) -> list[dict]:
-        """Phoneme scan producing per-position option lists (primary first)."""
+    def _scan(self, word: str, dialect_hint: str | None = None) -> list[dict]:
+        """Phoneme scan producing per-position option lists (primary first).
+
+        Maghrebi handling lives here: 9' -> dad, 8' -> ghayn, doubled
+        consonants are gemination and are written once, word-initial
+        doubling can be the assimilated definite article (jjaya -> الجاية,
+        and after a single-letter preposition bssalama -> بالسلامة), and
+        capital T/S give the emphatic readings (ط / ص). A dialect hint
+        re-orders the ambiguous digit readings (9 -> qaf in Maghrebi,
+        8 -> heh / ghayn); without a hint the global default applies.
+        """
         segments: list[dict] = []
         i, n = 0, len(word)
+        low = word.lower()
+        hint = dialect_hint.lower() if dialect_hint else None
         while i < n:
+            ch = low[i]
+            orig = word[i]
+
             # ay/ey: split alif+ya is primary (dayman -> دايما), digraph ya is
             # the alternative (3alayk -> عليك). Handled before the digraph table.
-            if word[i] in "ae" and i + 1 < n and word[i + 1] == "y" and (i + 2 >= n or word[i + 2] != "y"):
+            if ch in "ae" and i + 1 < n and low[i + 1] == "y" and (i + 2 >= n or low[i + 2] != "y"):
                 segments.append({"options": ["اي", "ي"], "final_a": False})
                 i += 2
                 continue
 
-            digraph = next((d for d in self.digraphs if word.startswith(d, i)), None)
+            # 9' and 8': dad and ghayn with the Egyptian apostrophe convention.
+            if ch in "98" and i + 1 < n and word[i + 1] in "'’":
+                segments.append({"options": ["ض" if ch == "9" else "غ"], "final_a": False})
+                i += 2
+                continue
+
+            # Doubled consonant: gemination is written once in Arabic script.
+            doubled = i + 1 < n and low[i + 1] == ch and ch not in "aeiou"
+
+            digraph = next((d for d in self.digraphs if low.startswith(d, i)), None)
             if digraph:
-                segments.append({"options": [self._phonemes["digraphs"][digraph]], "final_a": False})
+                opts = [self._phonemes["digraphs"][digraph]]
+                for alt in self._phonemes.get("digraph_alternatives", {}).get(digraph, []):
+                    if alt != opts[0]:
+                        opts.append(alt)
+                segments.append({"options": opts, "final_a": False})
                 i += len(digraph)
                 continue
 
-            ch = word[i]
             if ch in self.digits:
                 spec = self.digits[ch]
                 primary = spec["primary"]
                 alts = list(spec.get("alternatives", []))
+                if hint and spec.get("dialect_variants") and hint in spec["dialect_variants"]:
+                    variant = spec["dialect_variants"][hint]
+                    primary, alts = variant["primary"], list(variant.get("alternatives", []))
                 if ch == "2":
                     prev_out = segments[-1]["options"][0] if segments else ""
                     if i == n - 1 and prev_out in ("ا", "و", "ي", ""):
                         primary, alts = "ق", [a for a in alts if a != "ق"]
-                    elif i == 0 and n > 1 and word[1] not in "aeiou":
+                    elif i == 0 and n > 1 and low[1] not in "aeiou":
                         primary, alts = "ق", ["ا"]
-                segments.append({"options": [primary] + [a for a in alts if a != primary], "final_a": False})
-                i += 1
+                options = [primary] + [a for a in alts if a != primary]
+                segments.append({"options": options, "final_a": False})
+                i += 2 if doubled else 1
                 continue
 
             if ch in self.letters:
                 spec = self.letters[ch]
                 primary = spec["primary"]
                 alts = list(spec.get("alternatives", []))
+                if orig.isupper():
+                    case = self.case_rules.get(orig)
+                    if case:
+                        primary, alts = case["primary"], list(case.get("alternatives", []))
                 if ch == "a" and i == n - 1:
                     rule = self._context.get("final_a_taa_marbuta")
                     if rule:
                         primary, alts = rule["primary"], list(rule.get("alternatives", []))
                 if ch == "i" and i == n - 1:
                     primary, alts = "ي", [a for a in alts if a != "ي"]
-                segments.append({"options": [primary] + [a for a in alts if a != primary]})
-                i += 1
+                options = [primary] + [a for a in alts if a != primary]
+                if doubled:
+                    # Gemination: Arabic script writes it once, so the single
+                    # letter is the reading in the Maghrebi convention (bzzaf
+                    # -> بزاف), while the Levant keeps the double (mml -> ممل).
+                    # The hint picks the primary; both readings stay ranked.
+                    # Word-initial doubling can also be the assimilated
+                    # definite article in Maghrebi (jjaya -> الجاية), and the
+                    # same after a single-letter preposition (bssalama ->
+                    # بالسلامة, via the lexicon).
+                    if hint == "maghrebi":
+                        options = [options[0], options[0] + options[0]] + options[1:]
+                        if i == 0:
+                            options = ["ال" + options[0]] + options
+                        elif segments and len(segments[-1]["options"][0]) == 1 and segments[-1]["options"][0] in self._prepositions:
+                            options = options[:1] + ["ال" + options[0]] + options[1:]
+                    else:
+                        options = [options[0] + options[0]] + options
+                segments.append({"options": options})
+                i += 2 if doubled else 1
                 continue
 
-            segments.append({"options": [ch], "final_a": False})
+            segments.append({"options": [ch]})
             i += 1
         return segments
 
@@ -290,9 +350,14 @@ class Transliterator:
 _transliterator: Transliterator | None = None
 
 
-def transliterate(text: str, top_k: int = 1, with_dialect: bool = False) -> Result:
-    """Transliterate an Arabizi string to Arabic script (convenience API)."""
+def transliterate(text: str, top_k: int = 1, with_dialect: bool = False, dialect_hint: str | None = None) -> Result:
+    """Transliterate an Arabizi string to Arabic script (convenience API).
+
+    dialect_hint picks a regional convention for the ambiguous digit
+    readings ("maghrebi" reads 9 as qaf, for example). Without it the
+    global defaults apply and the ambiguity stays in the candidate list.
+    """
     global _transliterator
     if _transliterator is None:
         _transliterator = Transliterator()
-    return _transliterator.transliterate(text, top_k=top_k, with_dialect=with_dialect)
+    return _transliterator.transliterate(text, top_k=top_k, with_dialect=with_dialect, dialect_hint=dialect_hint)

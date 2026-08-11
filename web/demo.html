@@ -65,6 +65,13 @@
  font-family: var(--serif); font-size: 25px; color: var(--ink); caret-color: var(--clay);
  }
  .field input::placeholder { color: var(--ink-faint); font-style: italic; }
+ .hint {
+ border: 0; background: transparent; outline: 0; cursor: pointer;
+ font-family: var(--serif); font-style: italic; font-size: 14.5px; color: var(--ink-soft);
+ padding: 3px 2px; white-space: nowrap; transition: color .2s;
+ }
+ .hint:hover { color: var(--clay); }
+ .hint option { font-style: normal; }
  .copy {
  border: 0; background: transparent; cursor: pointer;
  font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--ink-soft);
@@ -148,6 +155,13 @@
  
  <input id="input" type="text" autocomplete="off" spellcheck="false"
  placeholder="ana 3ayz 2akol" dir="ltr" />
+ <select id="hint" class="hint" aria-label="Dialect hint" title="Assume a dialect for the ambiguous readings">
+ <option value="">auto</option>
+ <option value="egyptian">egyptian</option>
+ <option value="levantine">levantine</option>
+ <option value="gulf">gulf</option>
+ <option value="maghrebi">maghrebi</option>
+ </select>
  <button class="copy" id="copy" title="Copy the Arabic" aria-label="Copy the Arabic">copy</button>
  </section>
 
@@ -169,7 +183,7 @@
 
  <footer class="foot">
  <span><b>33</b> benchmark cases | exact@1 <b>1.000</b> | hit@3 <b>1.000</b></span>
- <span>v0.1.0 - by <a href="https://github.com/rb2625" target="_blank" rel="noreferrer">Muhammed Rabeeh Mattath</a> | <a href="https://github.com/rb2625/arabizi-kit" target="_blank" rel="noreferrer">github</a></span>
+ <span>v0.3.0 - by <a href="https://github.com/rb2625" target="_blank" rel="noreferrer">Muhammed Rabeeh Mattath</a> | <a href="https://github.com/rb2625/arabizi-kit" target="_blank" rel="noreferrer">github</a></span>
  </footer>
  </div>
 
@@ -178,15 +192,15 @@
  * Data tables come verbatim from src/arabizikit/data/ (single source of truth). */
 
 const PHONEMES = {
-  "version": "0.1.0",
-  "description": "Arabizi -> Arabic phoneme tables for arabizikit. Digraphs are tried longest-first before single letters. 'alternatives' lists are in priority order and are used to generate ranked candidate transliterations.",
+  "version": "0.3.0",
+  "description": "Arabizi -> Arabic phoneme tables for arabizikit. Digraphs are tried longest-first before single letters. 'alternatives' lists are in priority order and are used to generate ranked candidate transliterations. v0.3 adds the Maghrebi conventions: ch reads as shin (French-influenced spelling, tch for the rare tsh reading), 9 reads as qaf in Morocco (sad in Egypt, dad as 9'), and 8 reads as ghayn or heh depending on the writer.",
   "digraphs": {
     "kh": "خ",
     "gh": "غ",
     "sh": "ش",
     "th": "ث",
     "dh": "ذ",
-    "ch": "تش",
+    "ch": "ش",
     "ee": "ي",
     "ii": "ي",
     "oo": "و",
@@ -194,6 +208,11 @@ const PHONEMES = {
     "aa": "ا",
     "ou": "و",
     "iy": "ي"
+  },
+  "digraph_alternatives": {
+    "ch": [
+      "تش"
+    ]
   },
   "digits": {
     "2": {
@@ -222,13 +241,43 @@ const PHONEMES = {
     "8": {
       "primary": "ق",
       "alternatives": [
-        "غ"
+        "غ",
+        "ه"
       ],
-      "note": "8 is qaf in the Egyptian convention; 8' is ghayn."
+      "dialect_variants": {
+        "maghrebi": {
+          "primary": "ه",
+          "alternatives": [
+            "ق",
+            "غ"
+          ]
+        },
+        "gulf": {
+          "primary": "غ",
+          "alternatives": [
+            "ق",
+            "ه"
+          ]
+        }
+      },
+      "note": "8 is qaf in the Egyptian convention, ghayn in the Gulf, and heh in some Moroccan writing (n8ar -> نهار). 8' is ghayn."
     },
     "9": {
       "primary": "ص",
-      "alternatives": []
+      "alternatives": [
+        "ق",
+        "ض"
+      ],
+      "dialect_variants": {
+        "maghrebi": {
+          "primary": "ق",
+          "alternatives": [
+            "ص",
+            "ض"
+          ]
+        }
+      },
+      "note": "9 is sad in the Egyptian convention (9ba7 -> صباح), qaf in Moroccan Darija (yb9aw -> يبقاو), and dad as 9' (ra9'e -> راضي). A dialect hint (transliterate(..., dialect_hint=...)) picks the regional reading; without one, sad stays the global default."
     },
     "4": {
       "primary": "ذ",
@@ -374,6 +423,21 @@ const PHONEMES = {
       ]
     }
   },
+  "case_rules": {
+    "T": {
+      "primary": "ط",
+      "alternatives": [
+        "ت"
+      ],
+      "note": "The Moroccan convention uses capitals for emphatic readings: T for ta (Tab3an -> طبعا), S for sad (9Sdti -> قصدتي)."
+    },
+    "S": {
+      "primary": "ص",
+      "alternatives": [
+        "س"
+      ]
+    }
+  },
   "context_rules": [
     {
       "id": "final_2_after_vowel_is_qaf",
@@ -398,9 +462,10 @@ const PHONEMES = {
       "when": "word_final",
       "primary": "ة",
       "alternatives": [
-        "ا"
+        "ا",
+        "ى"
       ],
-      "note": "7elwa -> حلوة (taa marbuta) is the default; hada -> هذا (alif) is the alternative, and the lexicon overrides the top ambiguous words."
+      "note": "7elwa -> حلوة (taa marbuta) is the default; hada -> هذا (alif) is the alternative, and the lexicon overrides the top ambiguous words. Ya (ى) covers the Maghrebi -a/-aa spelling (b9a -> بقى)."
     },
     {
       "id": "final_i_is_ya",
@@ -1145,6 +1210,119 @@ const LEXICON = {
   "shay2": {
     "ar": "شيء",
     "dialect": "common"
+  },
+  "bach": {
+    "ar": "باش",
+    "dialect": "maghrebi"
+  },
+  "ila": {
+    "ar": "الى",
+    "dialect": "maghrebi",
+    "note": "Moroccan ila = if / when"
+  },
+  "wakha": {
+    "ar": "وخا",
+    "dialect": "maghrebi",
+    "note": "wakhkha / wakha = okay, fine"
+  },
+  "wakhkha": {
+    "ar": "وخا",
+    "dialect": "maghrebi"
+  },
+  "hadchi": {
+    "ar": "هادشي",
+    "dialect": "maghrebi",
+    "note": "this thing"
+  },
+  "hadak": {
+    "ar": "هداك",
+    "dialect": "maghrebi"
+  },
+  "dik": {
+    "ar": "ديك",
+    "dialect": "maghrebi"
+  },
+  "nta": {
+    "ar": "نتا",
+    "dialect": "maghrebi"
+  },
+  "nti": {
+    "ar": "نتي",
+    "dialect": "maghrebi"
+  },
+  "hna": {
+    "ar": "هنا",
+    "dialect": "common"
+  },
+  "7na": {
+    "ar": "حنا",
+    "dialect": "maghrebi",
+    "note": "we"
+  },
+  "b9a": {
+    "ar": "بقى",
+    "dialect": "maghrebi"
+  },
+  "9al": {
+    "ar": "قال",
+    "dialect": "maghrebi"
+  },
+  "9lb": {
+    "ar": "قلب",
+    "dialect": "maghrebi"
+  },
+  "m3ak": {
+    "ar": "معاك",
+    "dialect": "maghrebi"
+  },
+  "3ndk": {
+    "ar": "عندك",
+    "dialect": "common"
+  },
+  "chi": {
+    "ar": "شي",
+    "dialect": "common"
+  },
+  "7aja": {
+    "ar": "حاجة",
+    "dialect": "common"
+  },
+  "houma": {
+    "ar": "هوما",
+    "dialect": "maghrebi"
+  },
+  "homa": {
+    "ar": "هوما",
+    "dialect": "maghrebi"
+  },
+  "kayn": {
+    "ar": "كاين",
+    "dialect": "maghrebi",
+    "note": "there is / exists"
+  },
+  "llah": {
+    "ar": "الله",
+    "dialect": "maghrebi"
+  },
+  "bssalama": {
+    "ar": "بالسلامة",
+    "dialect": "maghrebi"
+  },
+  "wach": {
+    "ar": "واش",
+    "dialect": "maghrebi"
+  },
+  "ash": {
+    "ar": "اش",
+    "dialect": "maghrebi"
+  },
+  "chwiya": {
+    "ar": "شوية",
+    "dialect": "maghrebi"
+  },
+  "3lach": {
+    "ar": "علاش",
+    "dialect": "maghrebi"
   }
 };
 
@@ -1161,6 +1339,7 @@ const LEXICON = {
   const ARTICLES = new Set(["el", "al", "il", "l"]);
   const CONTRACTIONS = { "3al": { prefix: "على ال", fallback: "على" } };
   const CONJ = { "w": "و" };
+  const PREPOSITIONS = new Set(["ب", "ف", "ك", "ل", "د", "و"]);
   const DIALECTS = ["gulf", "egyptian", "levantine", "maghrebi"];
   const PATTERN_RULES = [
     ["maghrebi", /\b(wesh|wacha|kifash|3afak|bzzaf|daba|sh7al|bghit|mzyan)\b/i],
@@ -1171,8 +1350,10 @@ const LEXICON = {
 
   const DIGRAPHS = Object.keys(PHONEMES.digraphs).sort((a, b) => b.length - a.length);
   const DIGRAPH_MAP = PHONEMES.digraphs;
+  const DIGRAPH_ALTS = PHONEMES.digraph_alternatives || {};
   const DIGITS = PHONEMES.digits;
   const LETTERS = PHONEMES.letters;
+  const CASE_RULES = PHONEMES.case_rules || {};
   const CONTEXT = {};
   for (const r of PHONEMES.context_rules) CONTEXT[r.id] = r;
   const BAD = PHONEMES.bad_sequences;
@@ -1193,52 +1374,94 @@ const LEXICON = {
     return tokens;
   }
 
-  function scanWord(word) {
+  function scanWord(word, dialectHint) {
     const segments = [];
     let i = 0;
     const n = word.length;
+    const low = word.toLowerCase();
+    const hint = dialectHint ? String(dialectHint).toLowerCase() : null;
     while (i < n) {
-      if ("ae".indexOf(word[i]) !== -1 && i + 1 < n && word[i + 1] === "y" &&
-          (i + 2 >= n || word[i + 2] !== "y")) {
+      const ch = low[i];
+      const orig = word[i];
+
+      if ("ae".indexOf(ch) !== -1 && i + 1 < n && low[i + 1] === "y" &&
+          (i + 2 >= n || low[i + 2] !== "y")) {
         segments.push({ options: ["اي", "ي"] });
         i += 2;
         continue;
       }
+      if ("98".indexOf(ch) !== -1 && i + 1 < n && "'’".indexOf(word[i + 1]) !== -1) {
+        segments.push({ options: [ch === "9" ? "ض" : "غ"] });
+        i += 2;
+        continue;
+      }
+      const doubled = i + 1 < n && low[i + 1] === ch && "aeiou".indexOf(ch) === -1;
+
       let digraph = null;
       for (const d of DIGRAPHS) {
-        if (word.startsWith(d, i)) { digraph = d; break; }
+        if (low.startsWith(d, i)) { digraph = d; break; }
       }
       if (digraph) {
-        segments.push({ options: [DIGRAPH_MAP[digraph]] });
+        const opts = [DIGRAPH_MAP[digraph]];
+        for (const alt of DIGRAPH_ALTS[digraph] || []) {
+          if (alt !== opts[0]) opts.push(alt);
+        }
+        segments.push({ options: opts });
         i += digraph.length;
         continue;
       }
-      const ch = word[i];
       if (ch in DIGITS) {
         let primary = DIGITS[ch].primary;
         let alts = (DIGITS[ch].alternatives || []).slice();
+        if (hint && DIGITS[ch].dialect_variants && DIGITS[ch].dialect_variants[hint]) {
+          const variant = DIGITS[ch].dialect_variants[hint];
+          primary = variant.primary;
+          alts = (variant.alternatives || []).slice();
+        }
         if (ch === "2") {
           const prevOut = segments.length ? segments[segments.length - 1].options[0] : "";
           if (i === n - 1 && ["ا", "و", "ي", ""].indexOf(prevOut) !== -1) {
             primary = "ق"; alts = alts.filter((a) => a !== "ق");
-          } else if (i === 0 && n > 1 && "aeiou".indexOf(word[1]) === -1) {
+          } else if (i === 0 && n > 1 && "aeiou".indexOf(low[1]) === -1) {
             primary = "ق"; alts = ["ا"];
           }
         }
-        segments.push({ options: [primary].concat(alts.filter((a) => a !== primary)) });
-        i += 1;
+        const options = [primary].concat(alts.filter((a) => a !== primary));
+        segments.push({ options });
+        i += doubled ? 2 : 1;
         continue;
       }
       if (ch in LETTERS) {
         let primary = LETTERS[ch].primary;
         let alts = (LETTERS[ch].alternatives || []).slice();
+        if (orig !== ch) {
+          const caseRule = CASE_RULES[orig];
+          if (caseRule) {
+            primary = caseRule.primary;
+            alts = (caseRule.alternatives || []).slice();
+          }
+        }
         if (ch === "a" && i === n - 1 && CONTEXT.final_a_taa_marbuta) {
           primary = CONTEXT.final_a_taa_marbuta.primary;
           alts = (CONTEXT.final_a_taa_marbuta.alternatives || []).slice();
         }
         if (ch === "i" && i === n - 1) { primary = "ي"; alts = alts.filter((a) => a !== "ي"); }
-        segments.push({ options: [primary].concat(alts.filter((a) => a !== primary)) });
-        i += 1;
+        let options = [primary].concat(alts.filter((a) => a !== primary));
+        if (doubled) {
+          if (hint === "maghrebi") {
+            options = [options[0], options[0] + options[0]].concat(options.slice(1));
+            if (i === 0) {
+              options = ["ال" + options[0]].concat(options);
+            } else if (segments.length && segments[segments.length - 1].options[0].length === 1 &&
+                       PREPOSITIONS.has(segments[segments.length - 1].options[0])) {
+              options = options.slice(0, 1).concat(["ال" + options[0]]).concat(options.slice(1));
+            }
+          } else {
+            options = [options[0] + options[0]].concat(options);
+          }
+        }
+        segments.push({ options });
+        i += doubled ? 2 : 1;
         continue;
       }
       segments.push({ options: [ch] });
@@ -1275,9 +1498,9 @@ const LEXICON = {
     return out.join("");
   }
 
-  function ruleCandidates(word, maxCandidates) {
+  function ruleCandidates(word, maxCandidates, dialectHint) {
     maxCandidates = maxCandidates || 8;
-    const segments = scanWord(word);
+    const segments = scanWord(word, dialectHint);
     let results = [""];
     for (const seg of segments) {
       let opts = seg.options;
@@ -1299,19 +1522,20 @@ const LEXICON = {
     return scored.slice(0, Math.max(maxCandidates, 1));
   }
 
-  function processWord(word) {
-    if (CONJ[word] !== undefined) return { kind: "conj", raw: word, attach: CONJ[word] };
-    if (ARTICLES.has(word)) return { kind: "article", raw: word };
-    if (CONTRACTIONS[word]) return { kind: "contraction", raw: word, prefix: CONTRACTIONS[word].prefix, fallback: CONTRACTIONS[word].fallback };
-    const entry = LEXICON[word];
+  function processWord(word, dialectHint) {
+    const low = word.toLowerCase();
+    if (CONJ[low] !== undefined) return { kind: "conj", raw: low, attach: CONJ[low] };
+    if (ARTICLES.has(low)) return { kind: "article", raw: low };
+    if (CONTRACTIONS[low]) return { kind: "contraction", raw: low, prefix: CONTRACTIONS[low].prefix, fallback: CONTRACTIONS[low].fallback };
+    const entry = LEXICON[low];
     if (entry) {
       return {
-        kind: "word", raw: word,
+        kind: "word", raw: low,
         candidates: [{ ar: entry.ar, score: 0.0 }],
-        evidence: [{ arabizi: word, ar: entry.ar, dialect: entry.dialect }],
+        evidence: [{ arabizi: low, ar: entry.ar, dialect: entry.dialect }],
       };
     }
-    return { kind: "word", raw: word, candidates: ruleCandidates(word), evidence: [] };
+    return { kind: "word", raw: low, candidates: ruleCandidates(word, undefined, dialectHint), evidence: [] };
   }
 
   function attachPass(words) {
@@ -1388,8 +1612,9 @@ const LEXICON = {
   function transliterate(text, opts) {
     opts = opts || {};
     const topK = opts.topK || 1;
+    const dialectHint = opts.dialectHint || null;
     const words = attachPass(tokenize(text).map((t) =>
-      t.kind === "latin" ? processWord(t.raw.toLowerCase()) : t
+      t.kind === "latin" ? processWord(t.raw, dialectHint) : t
     ));
 
     const parts = [];
@@ -1426,7 +1651,7 @@ const LEXICON = {
  { latin: "ana 3ayz 2akol", dialect: "egyptian", ar: "أنا عايز آكل" },
  { latin: "shlonak ya 5al", dialect: "gulf", ar: "شلونك يا خال" },
  { latin: "shu 3am 3emel el yom", dialect: "levantine", ar: "شو عم عمل اليوم" },
- { latin: "wacha kolshi mzyan", dialect: "maghrebi", ar: "واش كلشي مزيان" },
+ { latin: "homa mkhbbyin chi 7aja", dialect: "maghrebi", ar: "هوما مخبيين شي حاجة" },
  { latin: "yalla nro7 3al 7ay", dialect: "gulf", ar: "يلا نروح على الحي" },
  { latin: "hatha maqal mumtaz", dialect: "msa", ar: "هذا مقال ممتاز" },
  ];
@@ -1437,16 +1662,22 @@ const LEXICON = {
  const chipsEl = document.getElementById("chips");
  const samplesEl = document.getElementById("samples");
  const copyBtn = document.getElementById("copy");
+ const hintEl = document.getElementById("hint");
 
  function render(text) {
- const res = ArabiziKit.transliterate(text, { topK: 4, withDialect: true });
+ const hint = hintEl.value || null;
+ const res = ArabiziKit.transliterate(text, { topK: 4, withDialect: true, dialectHint: hint });
  output.textContent = res.text;
  output.classList.remove("flash");
  void output.offsetWidth;
  output.classList.add("flash");
 
+ if (hint) {
+ dialectEl.textContent = hint + ", assumed";
+ } else {
  const d = res.dialect ? res.dialect.dialect : "unknown";
  dialectEl.textContent = d + (res.dialect && res.dialect.confidence ? ", confident" : "");
+ }
 
  chipsEl.innerHTML = "";
  res.candidates.slice(1).forEach((c, i) => {
@@ -1460,6 +1691,7 @@ const LEXICON = {
  }
 
  input.addEventListener("input", () => render(input.value));
+ hintEl.addEventListener("change", () => render(input.value));
  render("ana 3ayz 2akol");
  input.value = "ana 3ayz 2akol";
 

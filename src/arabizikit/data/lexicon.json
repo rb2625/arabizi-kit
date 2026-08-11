@@ -1,6 +1,6 @@
 {
-  "version": "0.1.0",
-  "description": "Seed bilingual lexicon of high-frequency Arabizi words with dialect tags. Exact-match lookups take priority over rule-based transliteration. Dialects: common, msa, gulf, egyptian, levantine, maghrebi.",
+  "version": "0.3.0",
+  "description": "Seed bilingual lexicon of high-frequency Arabizi words with dialect tags. Exact-match lookups take priority over rule-based transliteration. Dialects: common, msa, gulf, egyptian, levantine, maghrebi. v0.3 adds a Maghrebi block covering the Moroccan Darija forms seen in the external held-out sets.",
   "entries": {
     "ana": { "ar": "أنا", "dialect": "common" },
     "bint": { "ar": "بنت", "dialect": "common" },
@@ -178,6 +178,33 @@
     "jayyed": { "ar": "جيد", "dialect": "msa" },
     "maqal": { "ar": "مقال", "dialect": "msa" },
     "maktab": { "ar": "مكتب", "dialect": "common" },
-    "shay2": { "ar": "شيء", "dialect": "common" }
+    "shay2": { "ar": "شيء", "dialect": "common" },
+    "bach": { "ar": "باش", "dialect": "maghrebi" },
+    "ila": { "ar": "الى", "dialect": "maghrebi", "note": "Moroccan ila = if / when" },
+    "wakha": { "ar": "وخا", "dialect": "maghrebi", "note": "wakhkha / wakha = okay, fine" },
+    "wakhkha": { "ar": "وخا", "dialect": "maghrebi" },
+    "hadchi": { "ar": "هادشي", "dialect": "maghrebi", "note": "this thing" },
+    "hadak": { "ar": "هداك", "dialect": "maghrebi" },
+    "dik": { "ar": "ديك", "dialect": "maghrebi" },
+    "nta": { "ar": "نتا", "dialect": "maghrebi" },
+    "nti": { "ar": "نتي", "dialect": "maghrebi" },
+    "hna": { "ar": "هنا", "dialect": "common" },
+    "7na": { "ar": "حنا", "dialect": "maghrebi", "note": "we" },
+    "b9a": { "ar": "بقى", "dialect": "maghrebi" },
+    "9al": { "ar": "قال", "dialect": "maghrebi" },
+    "9lb": { "ar": "قلب", "dialect": "maghrebi" },
+    "m3ak": { "ar": "معاك", "dialect": "maghrebi" },
+    "3ndk": { "ar": "عندك", "dialect": "common" },
+    "chi": { "ar": "شي", "dialect": "common" },
+    "7aja": { "ar": "حاجة", "dialect": "common" },
+    "houma": { "ar": "هوما", "dialect": "maghrebi" },
+    "homa": { "ar": "هوما", "dialect": "maghrebi" },
+    "kayn": { "ar": "كاين", "dialect": "maghrebi", "note": "there is / exists" },
+    "llah": { "ar": "الله", "dialect": "maghrebi" },
+    "bssalama": { "ar": "بالسلامة", "dialect": "maghrebi" },
+    "wach": { "ar": "واش", "dialect": "maghrebi" },
+    "ash": { "ar": "اش", "dialect": "maghrebi" },
+    "chwiya": { "ar": "شوية", "dialect": "maghrebi" },
+    "3lach": { "ar": "علاش", "dialect": "maghrebi" }
   }
 }

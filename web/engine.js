@@ -11,6 +11,7 @@
   const ARTICLES = new Set(["el", "al", "il", "l"]);
   const CONTRACTIONS = { "3al": { prefix: "على ال", fallback: "على" } };
   const CONJ = { "w": "و" };
+  const PREPOSITIONS = new Set(["ب", "ف", "ك", "ل", "د", "و"]);
   const DIALECTS = ["gulf", "egyptian", "levantine", "maghrebi"];
   const PATTERN_RULES = [
     ["maghrebi", /\b(wesh|wacha|kifash|3afak|bzzaf|daba|sh7al|bghit|mzyan)\b/i],
@@ -21,8 +22,10 @@
 
   const DIGRAPHS = Object.keys(PHONEMES.digraphs).sort((a, b) => b.length - a.length);
   const DIGRAPH_MAP = PHONEMES.digraphs;
+  const DIGRAPH_ALTS = PHONEMES.digraph_alternatives || {};
   const DIGITS = PHONEMES.digits;
   const LETTERS = PHONEMES.letters;
+  const CASE_RULES = PHONEMES.case_rules || {};
   const CONTEXT = {};
   for (const r of PHONEMES.context_rules) CONTEXT[r.id] = r;
   const BAD = PHONEMES.bad_sequences;
@@ -43,52 +46,94 @@
     return tokens;
   }
 
-  function scanWord(word) {
+  function scanWord(word, dialectHint) {
     const segments = [];
     let i = 0;
     const n = word.length;
+    const low = word.toLowerCase();
+    const hint = dialectHint ? String(dialectHint).toLowerCase() : null;
     while (i < n) {
-      if ("ae".indexOf(word[i]) !== -1 && i + 1 < n && word[i + 1] === "y" &&
-          (i + 2 >= n || word[i + 2] !== "y")) {
+      const ch = low[i];
+      const orig = word[i];
+
+      if ("ae".indexOf(ch) !== -1 && i + 1 < n && low[i + 1] === "y" &&
+          (i + 2 >= n || low[i + 2] !== "y")) {
         segments.push({ options: ["اي", "ي"] });
         i += 2;
         continue;
       }
+      if ("98".indexOf(ch) !== -1 && i + 1 < n && "'’".indexOf(word[i + 1]) !== -1) {
+        segments.push({ options: [ch === "9" ? "ض" : "غ"] });
+        i += 2;
+        continue;
+      }
+      const doubled = i + 1 < n && low[i + 1] === ch && "aeiou".indexOf(ch) === -1;
+
       let digraph = null;
       for (const d of DIGRAPHS) {
-        if (word.startsWith(d, i)) { digraph = d; break; }
+        if (low.startsWith(d, i)) { digraph = d; break; }
       }
       if (digraph) {
-        segments.push({ options: [DIGRAPH_MAP[digraph]] });
+        const opts = [DIGRAPH_MAP[digraph]];
+        for (const alt of DIGRAPH_ALTS[digraph] || []) {
+          if (alt !== opts[0]) opts.push(alt);
+        }
+        segments.push({ options: opts });
         i += digraph.length;
         continue;
       }
-      const ch = word[i];
       if (ch in DIGITS) {
         let primary = DIGITS[ch].primary;
         let alts = (DIGITS[ch].alternatives || []).slice();
+        if (hint && DIGITS[ch].dialect_variants && DIGITS[ch].dialect_variants[hint]) {
+          const variant = DIGITS[ch].dialect_variants[hint];
+          primary = variant.primary;
+          alts = (variant.alternatives || []).slice();
+        }
         if (ch === "2") {
           const prevOut = segments.length ? segments[segments.length - 1].options[0] : "";
           if (i === n - 1 && ["ا", "و", "ي", ""].indexOf(prevOut) !== -1) {
             primary = "ق"; alts = alts.filter((a) => a !== "ق");
-          } else if (i === 0 && n > 1 && "aeiou".indexOf(word[1]) === -1) {
+          } else if (i === 0 && n > 1 && "aeiou".indexOf(low[1]) === -1) {
             primary = "ق"; alts = ["ا"];
           }
         }
-        segments.push({ options: [primary].concat(alts.filter((a) => a !== primary)) });
-        i += 1;
+        const options = [primary].concat(alts.filter((a) => a !== primary));
+        segments.push({ options });
+        i += doubled ? 2 : 1;
         continue;
       }
       if (ch in LETTERS) {
         let primary = LETTERS[ch].primary;
         let alts = (LETTERS[ch].alternatives || []).slice();
+        if (orig !== ch) {
+          const caseRule = CASE_RULES[orig];
+          if (caseRule) {
+            primary = caseRule.primary;
+            alts = (caseRule.alternatives || []).slice();
+          }
+        }
         if (ch === "a" && i === n - 1 && CONTEXT.final_a_taa_marbuta) {
           primary = CONTEXT.final_a_taa_marbuta.primary;
           alts = (CONTEXT.final_a_taa_marbuta.alternatives || []).slice();
         }
         if (ch === "i" && i === n - 1) { primary = "ي"; alts = alts.filter((a) => a !== "ي"); }
-        segments.push({ options: [primary].concat(alts.filter((a) => a !== primary)) });
-        i += 1;
+        let options = [primary].concat(alts.filter((a) => a !== primary));
+        if (doubled) {
+          if (hint === "maghrebi") {
+            options = [options[0], options[0] + options[0]].concat(options.slice(1));
+            if (i === 0) {
+              options = ["ال" + options[0]].concat(options);
+            } else if (segments.length && segments[segments.length - 1].options[0].length === 1 &&
+                       PREPOSITIONS.has(segments[segments.length - 1].options[0])) {
+              options = options.slice(0, 1).concat(["ال" + options[0]]).concat(options.slice(1));
+            }
+          } else {
+            options = [options[0] + options[0]].concat(options);
+          }
+        }
+        segments.push({ options });
+        i += doubled ? 2 : 1;
         continue;
       }
       segments.push({ options: [ch] });
@@ -125,9 +170,9 @@
     return out.join("");
   }
 
-  function ruleCandidates(word, maxCandidates) {
+  function ruleCandidates(word, maxCandidates, dialectHint) {
     maxCandidates = maxCandidates || 8;
-    const segments = scanWord(word);
+    const segments = scanWord(word, dialectHint);
     let results = [""];
     for (const seg of segments) {
       let opts = seg.options;
@@ -149,19 +194,20 @@
     return scored.slice(0, Math.max(maxCandidates, 1));
   }
 
-  function processWord(word) {
-    if (CONJ[word] !== undefined) return { kind: "conj", raw: word, attach: CONJ[word] };
-    if (ARTICLES.has(word)) return { kind: "article", raw: word };
-    if (CONTRACTIONS[word]) return { kind: "contraction", raw: word, prefix: CONTRACTIONS[word].prefix, fallback: CONTRACTIONS[word].fallback };
-    const entry = LEXICON[word];
+  function processWord(word, dialectHint) {
+    const low = word.toLowerCase();
+    if (CONJ[low] !== undefined) return { kind: "conj", raw: low, attach: CONJ[low] };
+    if (ARTICLES.has(low)) return { kind: "article", raw: low };
+    if (CONTRACTIONS[low]) return { kind: "contraction", raw: low, prefix: CONTRACTIONS[low].prefix, fallback: CONTRACTIONS[low].fallback };
+    const entry = LEXICON[low];
     if (entry) {
       return {
-        kind: "word", raw: word,
+        kind: "word", raw: low,
         candidates: [{ ar: entry.ar, score: 0.0 }],
-        evidence: [{ arabizi: word, ar: entry.ar, dialect: entry.dialect }],
+        evidence: [{ arabizi: low, ar: entry.ar, dialect: entry.dialect }],
       };
     }
-    return { kind: "word", raw: word, candidates: ruleCandidates(word), evidence: [] };
+    return { kind: "word", raw: low, candidates: ruleCandidates(word, undefined, dialectHint), evidence: [] };
   }
 
   function attachPass(words) {
@@ -238,8 +284,9 @@
   function transliterate(text, opts) {
     opts = opts || {};
     const topK = opts.topK || 1;
+    const dialectHint = opts.dialectHint || null;
     const words = attachPass(tokenize(text).map((t) =>
-      t.kind === "latin" ? processWord(t.raw.toLowerCase()) : t
+      t.kind === "latin" ? processWord(t.raw, dialectHint) : t
     ));
 
     const parts = [];

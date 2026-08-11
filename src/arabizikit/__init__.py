@@ -11,6 +11,6 @@ Public API
 from .dialect import guess_dialect
 from .transliterate import Transliterator, transliterate
 
-__version__ = "0.1.0"
+__version__ = "0.3.0"
 
 __all__ = ["Transliterator", "__version__", "guess_dialect", "transliterate"]

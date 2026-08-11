@@ -55,6 +55,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("text", nargs="*", help="Arabizi text to transliterate")
     parser.add_argument("--top-k", type=int, default=3, help="number of ranked candidates (default 3)")
     parser.add_argument("--dialect", action="store_true", help="show the detected dialect")
+    parser.add_argument("--hint", metavar="DIALECT", default=None, help="assume a dialect convention (egyptian, levantine, gulf, maghrebi) for the ambiguous readings")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     parser.add_argument("--llm", action="store_true", help="LLM-assisted disambiguation (requires ANTHROPIC_API_KEY)")
     parser.add_argument("--eval", nargs="?", const="default", metavar="DATA", help="run the benchmark suite")
@@ -94,6 +95,7 @@ def corpus_main(argv: list[str]) -> int:
     p_import.add_argument("--config", default=None)
     p_import.add_argument("--split", default=None)
     p_import.add_argument("--limit", type=int, default=None)
+    p_import.add_argument("--dialect", default=None, help="override the dialect tag (known datasets are tagged automatically)")
 
     p_filter = sub.add_parser("filter", help="extract Arabizi sentences from raw posts")
     p_filter.add_argument("--min-score", type=int, default=None)
@@ -153,6 +155,7 @@ def corpus_main(argv: list[str]) -> int:
                 config_name=args.config,
                 split=args.split,
                 limit=args.limit,
+                dialect=args.dialect,
             )
             print(json.dumps(report, ensure_ascii=False, indent=2))
         except (OSError, ValueError, RuntimeError) as exc:
@@ -233,7 +236,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     tr = Transliterator()
-    res = tr.transliterate(text, top_k=max(args.top_k, 1), with_dialect=args.dialect)
+    res = tr.transliterate(text, top_k=max(args.top_k, 1), with_dialect=args.dialect, dialect_hint=args.hint)
 
     if args.json:
         payload = {"text": res.text, "candidates": [{"arabic": ar, "score": s} for ar, s in res.candidates]}
