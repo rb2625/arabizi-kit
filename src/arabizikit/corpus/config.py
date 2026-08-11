@@ -11,6 +11,7 @@ CORPUS_DIR = Path(os.environ.get("ARABIZIKIT_CORPUS_DIR", Path(__file__).resolve
 RAW_DIR = CORPUS_DIR / "raw"
 ANNOTATED_DIR = CORPUS_DIR / "annotated"
 SPLITS_DIR = CORPUS_DIR / "splits"
+EXTERNAL_DIR = CORPUS_DIR / "external"
 
 DEFAULT_SUBREDDITS = ["Egypt", "arabs", "saudiarabia", "jordan", "Morocco", "Tunisia", "algeria", "lebanon"]
 DEFAULT_PAGES = 2
@@ -21,6 +22,10 @@ REDDIT_USER_AGENT = "arabizikit-corpus/0.2 (+https://github.com/rb2625/arabizi-k
 # endpoint, which many networks block.
 REDDIT_CLIENT_ID = os.environ.get("REDDIT_CLIENT_ID", "")
 REDDIT_CLIENT_SECRET = os.environ.get("REDDIT_CLIENT_SECRET", "")
+
+# Hugging Face datasets-server: no account needed for public datasets.
+HF_TEXT_FIELDS = ("arabize", "arabizi", "arabizi_text", "text", "tweet", "comment", "sentence", "content")
+HF_BATCH = 100
 
 MIN_ARABIZI_SCORE = 2
 MIN_WORDS = 2

@@ -1,7 +1,12 @@
-"""Stratified train/dev/test split of the annotated corpus.
+"""Held-out split and external benchmark import.
 
-Output files use the same shape as data/benchmark.json so the held-out test
-set can be scored directly with: arabizikit eval --data corpus_data/splits/test.json
+split_annotated writes train/dev/test in the same shape as data/benchmark.json
+so the held-out test set can be scored with:
+    arabizikit eval --data corpus_data/splits/test.json
+
+import_parallel converts a parallel Arabizi/Arabic dataset (for example
+arbml/Arabizi_Transliteration on Hugging Face, which ships gold references)
+into a benchmark file for instant external evaluation.
 """
 
 from __future__ import annotations
@@ -11,6 +16,7 @@ import random
 from pathlib import Path
 
 from . import config
+from .harvest import fetch_hf_rows, resolve_split
 
 
 def load_annotated(path: str | Path) -> list[dict]:
@@ -75,3 +81,54 @@ def split_annotated(
 
     dialect_counts = {d: len(g) for d, g in by_dialect.items()}
     return {"n": len(rows), "splits": written, "dialects": dialect_counts, "out": str(out_dir)}
+
+
+def import_parallel(
+    dataset: str,
+    arabizi_field: str,
+    arabic_field: str,
+    config_name: str | None = None,
+    split: str | None = None,
+    limit: int | None = None,
+    out_path: str | Path | None = None,
+) -> dict:
+    """Convert a parallel Arabizi/Arabic dataset into a benchmark file.
+
+    Rows without usable values in either field are skipped.
+    """
+    out_path = Path(out_path or config.EXTERNAL_DIR / f"{dataset.split('/')[-1]}.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    config_name, split = resolve_split(dataset, config_name, split)
+
+    entries = []
+    offset = 0
+    while limit is None or len(entries) < limit:
+        chunk = fetch_hf_rows(dataset, config_name, split, offset=offset, length=config.HF_BATCH)
+        if not chunk:
+            break
+        for entry in chunk:
+            row = entry.get("row") or {}
+            arabizi = row.get(arabizi_field)
+            arabic = row.get(arabic_field)
+            if not arabizi or not arabic or not str(arabizi).strip() or not str(arabic).strip():
+                continue
+            entries.append(
+                {
+                    "id": f"ext-{dataset.split('/')[-1]}-{len(entries):05d}",
+                    "arabizi": str(arabizi),
+                    "reference": str(arabic),
+                    "dialect": "",
+                    "note": f"external: {dataset}",
+                }
+            )
+            if limit is not None and len(entries) >= limit:
+                break
+        offset += len(chunk)
+
+    payload = {
+        "version": "0.2.0",
+        "description": f"external benchmark imported from {dataset}",
+        "entries": entries,
+    }
+    out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"n": len(entries), "out": str(out_path)}

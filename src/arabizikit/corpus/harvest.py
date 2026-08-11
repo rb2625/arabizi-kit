@@ -1,11 +1,9 @@
-"""Harvest raw posts from Reddit.
+"""Harvest raw posts from public sources.
 
-The public JSON endpoint blocks anonymous access from many networks. The
-reliable path is a free Reddit script app: create one at
-reddit.com/prefs/apps, then export REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET.
-With those set, the harvester uses the OAuth API (higher limits, works
-everywhere). Without them it tries the public endpoint and reports a clear
-error with setup instructions.
+Reddit is the classic source, but Reddit now gates app creation behind an
+API approval queue (Responsible Builder Policy), so the pipeline also ships
+a Hugging Face datasets adapter that needs no account at all. Both write the
+same JSONL shape into raw/ so the rest of the pipeline is source-agnostic.
 """
 
 from __future__ import annotations
@@ -22,6 +20,8 @@ from pathlib import Path
 from .config import (
     DEFAULT_PAGES,
     DEFAULT_SUBREDDITS,
+    HF_BATCH,
+    HF_TEXT_FIELDS,
     RAW_DIR,
     REDDIT_CLIENT_ID,
     REDDIT_CLIENT_SECRET,
@@ -31,6 +31,9 @@ from .config import (
 TOKEN_URL = "https://www.reddit.com/api/v1/access_token"
 API_BASE = "https://oauth.reddit.com"
 PUBLIC_BASE = "https://www.reddit.com"
+HF_SPLITS_URL = "https://datasets-server.huggingface.co/splits"
+HF_FIRST_ROWS_URL = "https://datasets-server.huggingface.co/first-rows"
+HF_ROWS_URL = "https://datasets-server.huggingface.co/rows"
 
 _403_HINT = (
     "Reddit blocked the request (HTTP 403). Create a free script app at "
@@ -39,6 +42,9 @@ _403_HINT = (
 )
 
 
+# ---------------------------------------------------------------------------
+# Reddit
+# ---------------------------------------------------------------------------
 def get_access_token(client_id: str, client_secret: str) -> str:
     """Exchange client credentials for an OAuth token."""
     auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode("ascii")
@@ -152,6 +158,125 @@ def harvest(
                 fh.write(json.dumps(row, ensure_ascii=False) + "\n")
         stats[sub] = len(rows)
     return stats
+
+
+# ---------------------------------------------------------------------------
+# Hugging Face datasets
+# ---------------------------------------------------------------------------
+def _hf_get(url: str) -> dict:
+    req = urllib.request.Request(url, headers={"User-Agent": REDDIT_USER_AGENT})
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def discover_splits(dataset: str) -> list[tuple[str, str]]:
+    """Return (config, split) pairs for a dataset, train first when present."""
+    payload = _hf_get(f"{HF_SPLITS_URL}?dataset={urllib.parse.quote(dataset)}")
+    splits = [(s["config"], s["split"]) for s in payload.get("splits", [])]
+    return sorted(splits, key=lambda pair: (pair[1] != "train", pair))
+
+
+def resolve_split(dataset: str, config: str | None, split: str | None) -> tuple[str, str]:
+    """Pick config/split, preferring the train split."""
+    splits = discover_splits(dataset)
+    if not splits:
+        raise RuntimeError(f"no splits found for dataset {dataset}")
+    if config and split:
+        return config, split
+    if config:
+        candidates = [pair for pair in splits if pair[0] == config]
+        if not candidates:
+            raise RuntimeError(f"config {config} not found in {splits}")
+        for pair in candidates:
+            if pair[1] == "train":
+                return pair
+        return candidates[0]
+    for pair in splits:
+        if pair[1] == "train":
+            return pair
+    return splits[0]
+
+
+def fetch_hf_rows(dataset: str, config: str, split: str, offset: int = 0, length: int = 100) -> list[dict]:
+    """Fetch {row_idx, row} entries from the datasets-server rows endpoint."""
+    params = urllib.parse.urlencode(
+        {"dataset": dataset, "config": config, "split": split, "offset": offset, "length": length}
+    )
+    payload = _hf_get(f"{HF_ROWS_URL}?{params}")
+    if "rows" not in payload:
+        raise RuntimeError(f"HF rows request failed: {payload.get('error', 'unknown error')}")
+    return payload["rows"]
+
+
+def pick_text_field(features: list[dict], preferred: str | None = None) -> str:
+    """Find the Arabizi/text column in a dataset's schema."""
+    names = [f["name"] for f in features]
+    if preferred:
+        if preferred in names:
+            return preferred
+        raise RuntimeError(f"field {preferred} not in {names}")
+    for candidate in HF_TEXT_FIELDS:
+        if candidate in names:
+            return candidate
+    raise RuntimeError(f"no usable text field in {names}; pass --text-field")
+
+
+def harvest_hf(
+    dataset: str,
+    rows: int = 500,
+    text_field: str | None = None,
+    config: str | None = None,
+    split: str | None = None,
+    out_dir: str | Path | None = None,
+) -> dict:
+    """Harvest text rows from a public Hugging Face dataset into raw/."""
+    out_dir = Path(out_dir or RAW_DIR)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    config, split = resolve_split(dataset, config, split)
+
+    params = urllib.parse.urlencode({"dataset": dataset, "config": config, "split": split})
+    schema = _hf_get(f"{HF_FIRST_ROWS_URL}?{params}")
+    if "features" not in schema:
+        raise RuntimeError(f"HF schema request failed: {schema.get('error', 'unknown error')}")
+    field = pick_text_field(schema["features"], text_field)
+
+    written = 0
+    offset = 0
+    seen_ids: set[int] = set()
+    path = out_dir / f"{dataset.replace('/', '__')}.jsonl"
+    with path.open("w", encoding="utf-8") as fh:
+        while written < rows:
+            chunk = fetch_hf_rows(dataset, config, split, offset=offset, length=HF_BATCH)
+            if not chunk:
+                break
+            for entry in chunk:
+                row_idx = entry.get("row_idx", offset)
+                if row_idx in seen_ids:
+                    continue
+                seen_ids.add(row_idx)
+                text = (entry.get("row") or {}).get(field)
+                if not text or not str(text).strip():
+                    continue
+                fh.write(
+                    json.dumps(
+                        {
+                            "source": "huggingface",
+                            "dataset": dataset,
+                            "config": config,
+                            "split": split,
+                            "id": f"{dataset}-{row_idx}",
+                            "text": str(text),
+                            "fetched_at": datetime.now(timezone.utc).isoformat(),
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+                written += 1
+                if written >= rows:
+                    break
+            offset += len(chunk)
+    return {"dataset": dataset, "field": field, "rows_written": written, "out": str(path)}
 
 
 def iter_raw_rows(raw_dir: str | Path | None = None):

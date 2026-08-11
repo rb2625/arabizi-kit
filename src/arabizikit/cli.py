@@ -13,11 +13,20 @@ Examples::
 
 Corpus pipeline (v0.2)::
 
-    arabizikit corpus harvest --subreddits Egypt arabs --pages 2
+    # no-account path: harvest from a public Hugging Face dataset
+    arabizikit corpus harvest-hf --dataset AhmedSSabir/Gulf-Arabic-Tweets-2018-2020 --rows 500
     arabizikit corpus filter
     arabizikit corpus annotate            # requires ANTHROPIC_API_KEY
     arabizikit corpus split
-    arabizikit corpus run --subreddits Egypt arabs --pages 1
+    arabizikit corpus run --hf-dataset AhmedSSabir/Gulf-Arabic-Tweets-2018-2020 --rows 500
+
+    # external parallel set with gold references (instant eval, no API cost)
+    arabizikit corpus import-hf --dataset arbml/Arabizi_Transliteration \
+        --arabizi-field Arabize --arabic-field Arabic
+    arabizikit eval --data corpus_data/external/Arabizi_Transliteration.json
+
+    # optional Reddit path (needs a script app + the two env vars)
+    arabizikit corpus harvest --subreddits Egypt arabs --pages 2
 """
 
 from __future__ import annotations
@@ -31,8 +40,8 @@ from .corpus import annotate as corpus_annotate
 from .corpus import config as corpus_config
 from .corpus import pipeline as corpus_pipeline
 from .corpus.filter import filter_raw
-from .corpus.harvest import harvest
-from .corpus.split import split_annotated
+from .corpus.harvest import harvest, harvest_hf
+from .corpus.split import import_parallel, split_annotated
 from .disambiguate import llm_transliterate
 from .normalize import normalize
 from .transliterate import Transliterator
@@ -49,6 +58,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     parser.add_argument("--llm", action="store_true", help="LLM-assisted disambiguation (requires ANTHROPIC_API_KEY)")
     parser.add_argument("--eval", nargs="?", const="default", metavar="DATA", help="run the benchmark suite")
+    parser.add_argument("--data", metavar="FILE", help="evaluate against a benchmark file (alias for --eval FILE)")
     parser.add_argument("--normalize", nargs="+", metavar="TEXT", help="normalise Arabic text")
     return parser
 
@@ -60,6 +70,8 @@ def corpus_main(argv: list[str]) -> int:
     p_run = sub.add_parser("run", help="harvest, filter, then annotate and split when possible")
     p_run.add_argument("--subreddits", nargs="*", default=None)
     p_run.add_argument("--pages", type=int, default=corpus_config.DEFAULT_PAGES)
+    p_run.add_argument("--hf-dataset", default=None, help="harvest from Hugging Face instead of Reddit")
+    p_run.add_argument("--rows", type=int, default=500)
     p_run.add_argument("--min-score", type=int, default=None)
     p_run.add_argument("--no-annotate", action="store_true", help="skip LLM annotation")
     p_run.add_argument("--no-split", action="store_true", help="skip the split")
@@ -67,6 +79,21 @@ def corpus_main(argv: list[str]) -> int:
     p_harvest = sub.add_parser("harvest", help="fetch public Reddit posts into corpus_data/raw/")
     p_harvest.add_argument("--subreddits", nargs="*", default=None)
     p_harvest.add_argument("--pages", type=int, default=corpus_config.DEFAULT_PAGES)
+
+    p_hf = sub.add_parser("harvest-hf", help="harvest text from a public Hugging Face dataset (no account needed)")
+    p_hf.add_argument("--dataset", required=True)
+    p_hf.add_argument("--rows", type=int, default=500)
+    p_hf.add_argument("--text-field", default=None, help="column holding the text (auto-detected otherwise)")
+    p_hf.add_argument("--config", default=None)
+    p_hf.add_argument("--split", default=None)
+
+    p_import = sub.add_parser("import-hf", help="import a parallel Arabizi/Arabic dataset as a benchmark file")
+    p_import.add_argument("--dataset", required=True)
+    p_import.add_argument("--arabizi-field", required=True)
+    p_import.add_argument("--arabic-field", required=True)
+    p_import.add_argument("--config", default=None)
+    p_import.add_argument("--split", default=None)
+    p_import.add_argument("--limit", type=int, default=None)
 
     p_filter = sub.add_parser("filter", help="extract Arabizi sentences from raw posts")
     p_filter.add_argument("--min-score", type=int, default=None)
@@ -88,6 +115,8 @@ def corpus_main(argv: list[str]) -> int:
         report = corpus_pipeline.run(
             subreddits=args.subreddits,
             pages=args.pages,
+            hf_dataset=args.hf_dataset,
+            hf_rows=args.rows,
             annotate_enabled=not args.no_annotate,
             split_enabled=not args.no_split,
             min_score=args.min_score,
@@ -98,6 +127,37 @@ def corpus_main(argv: list[str]) -> int:
     if args.cmd == "harvest":
         stats = harvest(subreddits=args.subreddits, pages=args.pages)
         print(json.dumps(stats, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.cmd == "harvest-hf":
+        try:
+            stats = harvest_hf(
+                dataset=args.dataset,
+                rows=args.rows,
+                text_field=args.text_field,
+                config=args.config,
+                split=args.split,
+            )
+            print(json.dumps(stats, ensure_ascii=False, indent=2))
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"harvest failed: {exc}", file=sys.stderr)
+            return 1
+        return 0
+
+    if args.cmd == "import-hf":
+        try:
+            report = import_parallel(
+                dataset=args.dataset,
+                arabizi_field=args.arabizi_field,
+                arabic_field=args.arabic_field,
+                config_name=args.config,
+                split=args.split,
+                limit=args.limit,
+            )
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"import failed: {exc}", file=sys.stderr)
+            return 1
         return 0
 
     if args.cmd == "filter":
@@ -143,8 +203,8 @@ def main(argv: list[str] | None = None) -> int:
             print(normalize(text))
         return 0
 
-    if args.eval:
-        data_path = None if args.eval == "default" else args.eval
+    if args.eval or args.data:
+        data_path = args.data if args.data else (None if args.eval == "default" else args.eval)
         report = bench.run_benchmark(data_path=data_path, top_k=max(args.top_k, 1))
         if args.json:
             print(json.dumps(report, ensure_ascii=False, indent=2))

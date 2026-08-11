@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .normalize import normalize, normalized_tokens
+from .normalize import normalize_eval, normalized_tokens
 from .transliterate import Transliterator
 
 DEFAULT_DATA = Path(__file__).resolve().parents[2] / "data" / "benchmark.json"
@@ -48,9 +48,9 @@ def run_benchmark(data_path: str | Path | None = None, top_k: int = 3) -> dict:
     rows: list[dict] = []
     for e in entries:
         res = tr.transliterate(e["arabizi"], top_k=top_k)
-        preds = [normalize(ar) for ar, _ in res.candidates]
-        ref = normalize(e["reference"])
-        ref_tokens = normalized_tokens(e["reference"])
+        preds = [normalize_eval(ar) for ar, _ in res.candidates]
+        ref = normalize_eval(e["reference"])
+        ref_tokens = normalized_tokens(ref)
         pred_tokens = normalized_tokens(res.text)
         rows.append(
             {
@@ -59,9 +59,9 @@ def run_benchmark(data_path: str | Path | None = None, top_k: int = 3) -> dict:
                 "reference": e["reference"],
                 "predicted": res.text,
                 "dialect": e["dialect"],
-                "exact": normalize(res.text) == ref,
+                "exact": preds[0] == ref,
                 "hit": ref in preds,
-                "cer": levenshtein(normalize(res.text), ref) / max(len(ref), 1),
+                "cer": levenshtein(preds[0], ref) / max(len(ref), 1),
                 "wer": word_levenshtein(pred_tokens, ref_tokens) / max(len(ref_tokens), 1),
             }
         )

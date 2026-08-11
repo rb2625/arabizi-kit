@@ -49,3 +49,19 @@ def normalize(text: str) -> str:
 def normalized_tokens(text: str) -> list[str]:
     """Normalise and split into whitespace-separated tokens."""
     return [t for t in normalize(text).split(" ") if t]
+
+
+_PUNCT_RE = re.compile(r"[.,!?;:،؛؟()\"'‘’“”]")
+
+
+def normalize_eval(text: str) -> str:
+    """Normalise and strip punctuation for benchmark comparisons.
+
+    Real corpora attach trailing punctuation and whitespace to references;
+    the engine's sentence candidates do not. Measuring word recovery, not
+    punctuation fidelity, is the point of the eval metrics.
+    """
+    text = normalize(text)
+    text = _PUNCT_RE.sub(" ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text

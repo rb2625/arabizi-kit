@@ -5,21 +5,30 @@ from __future__ import annotations
 from . import config
 from .annotate import annotate
 from .filter import filter_raw
-from .harvest import harvest
+from .harvest import harvest, harvest_hf
 from .split import split_annotated
 
 
 def run(
     subreddits: list[str] | None = None,
     pages: int = config.DEFAULT_PAGES,
+    hf_dataset: str | None = None,
+    hf_rows: int = 500,
     annotate_enabled: bool = True,
     split_enabled: bool = True,
     min_score: int | None = None,
 ) -> dict:
-    """Run the full pipeline and return per-stage stats."""
+    """Run the full pipeline and return per-stage stats.
+
+    Use hf_dataset to harvest from Hugging Face (no account needed) instead
+    of Reddit.
+    """
     report: dict = {"harvest": None, "filter": None, "annotate": None, "split": None}
 
-    report["harvest"] = harvest(subreddits=subreddits, pages=pages)
+    if hf_dataset:
+        report["harvest"] = harvest_hf(dataset=hf_dataset, rows=hf_rows)
+    else:
+        report["harvest"] = harvest(subreddits=subreddits, pages=pages)
 
     report["filter"] = filter_raw(min_score=min_score)
 

@@ -1,4 +1,4 @@
-from arabizikit.normalize import normalize, normalized_tokens
+from arabizikit.normalize import normalize, normalize_eval, normalized_tokens
 
 
 def test_alef_variants_collapse():
@@ -36,3 +36,9 @@ def test_whitespace_collapsed():
 
 def test_tokens():
     assert normalized_tokens("أنا طالب") == ["انا", "طالب"]
+
+
+def test_normalize_eval_strips_punctuation():
+    assert normalize_eval("بدي اشتري هدية. ") == "بدي اشتري هديه"
+    assert normalize_eval("شلونك يا خال!") == "شلونك يا خال"
+    assert normalize_eval("كيفك؟") == "كيفك"
