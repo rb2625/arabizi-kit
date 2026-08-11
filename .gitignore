@@ -21,3 +21,6 @@ Thumbs.db
 .env
 .vercel/
 corpus_data/
+
+# npm auth token for publishing; never commit this file
+web/.npmrc

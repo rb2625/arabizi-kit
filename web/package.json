@@ -21,7 +21,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rb2625/arabizi-kit.git"
+    "url": "git+https://github.com/rb2625/arabizi-kit.git"
   },
   "homepage": "https://arabizi-kit.vercel.app"
 }
