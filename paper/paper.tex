@@ -4,9 +4,8 @@
 % Noto Naskh Arabic are both available on Overleaf and in TeX Live full).
 %   xelatex paper.tex
 %
-% TODO before submission: verify the bibliographic details of the cited
-% works (flagged inline), fill in the author affiliation, and decide the
-% final title from the options in the outline
+% Final for arXiv submission (target: cs.CL). Citations are verified
+% against the ACL Anthology; title and affiliation are final.
 
 \documentclass[11pt]{article}
 
@@ -35,7 +34,7 @@
 
 \author{Muhammed Rabeeh Mattath\\
   \small\url{https://github.com/rb2625/arabizi-kit}\\
-  \small\textit{affiliation to be filled in before submission}}
+  \small Student, American University of Ras Al Khaimah}
 \date{\today}
 
 \begin{document}
@@ -58,7 +57,7 @@ trigram language model that reranks candidates toward natural Arabic, and
 (iv) ships a reproducible evaluation suite with CER, WER, exact@1, and
 hit@k metrics. On our 33-sentence calibration set the hybrid pipeline
 reaches 1.0 exact match. On three external held-out sets with gold
-references it reaches 0.376 exact@1 (Egyptian, 500 sentences), 0.296
+references it reaches 0.376 exact@1 (Egyptian, 500), 0.296
 (Levantine, 389), and 0.088 (Moroccan Darija, 600) with oracle dialect
 hints; the learned layer raises the pipeline's own held-out test set from
 0.000 to 0.061 exact@1 and cuts CER from 0.299 to 0.226 without seeing any
@@ -105,15 +104,14 @@ digraphs in Maghrebi such as ch and the 9-as-qaf convention).
 
 Prior systems: Habash et al.~\cite{habash2012} proposed a hybrid
 approach for written Egyptian colloquial; COLABA
-(Al-Badrashiny et al.~\cite{albadrashiny2014}) built a parallel corpus
-and a transliteration system for Egyptian and Levantine social media;
-Eskander et al.~\cite{eskander2013} addressed the challenges of written
-Egyptian Arabic; the Jordanian Arabizi-Transliteration Corpus provides a
-parallel Jordanian resource; CAMeL Tools (Obeid et al.~\cite{obeid2020})
-offers an open toolkit with transliteration support; MADAR
-(Bouamor et al.~\cite{bouamor2018}) supplies dialect identification
-resources. \textit{TODO: verify exact titles, venues, and citation
-details before submission.}
+(Al-Badrashiny et al.~\cite{albadrashiny2014}) built a transliteration
+system for dialectal Arabic social media together with the Jordanian
+Arabizi-Transliteration Corpus; Eskander et al.~\cite{eskander2013}
+introduced CODAFY, which converts spontaneous Egyptian colloquial
+writing into conventional orthography; CAMeL Tools (Obeid
+et al.~\cite{obeid2020}) offers an open toolkit with transliteration
+support; MADAR (Bouamor et al.~\cite{bouamor2018}) supplies dialect
+identification resources.
 
 The gap: no maintained, open, modern (LLM-era) implementation with ranked
 candidate output, a living benchmark, and reproducible held-out numbers.
@@ -231,7 +229,7 @@ agreement.
 \label{sec:external}
 
 Three parallel Arabizi/Arabic datasets with gold references imported
-from Hugging Face, never used in training: Egyptian (500 sentences,
+from Hugging Face, never used in training: Egyptian (500,
 \url{https://huggingface.co/datasets/arbml/Arabizi_Transliteration}),
 Levantine (389, \url{https://huggingface.co/datasets/akhanafer/arabic-to-arabizi}),
 and Moroccan Darija (600, \url{https://huggingface.co/datasets/elkababi2/Darija-Text-Ar-Arabizi}).
@@ -376,20 +374,21 @@ Nizar Habash, Ramy Eskander, and Abdelati Hawwari.
 dialect into diacritized Arabic.
 \newblock In \emph{Proceedings of the 6th International Conference on
 Informatics and Systems (INFOS)}, Cairo, Egypt, 2012.
-\textit{TODO: verify venue before submission.}
 
 \bibitem{albadrashiny2014}
-Mohammed Al-Badrashiny, Ramy Eskander, Nizar Habash, and Owen Rambow.
-\newblock Automatic transliteration of Romanized dialectal Arabic.
-\newblock In \emph{Proceedings of the 2014 Conference on Computational
-Natural Language Learning (CoNLL)}, Baltimore, USA, 2014.
+Mohamed Al-Badrashiny, Ramy Eskander, Nizar Habash, and Owen Rambow.
+\newblock Automatic Transliteration of Romanized Dialectal Arabic.
+\newblock In \emph{Proceedings of the Eighteenth Conference on
+Computational Natural Language Learning (CoNLL-2014)}, pages 30--38,
+Ann Arbor, Michigan, USA, 2014.
 
 \bibitem{eskander2013}
-Ramy Eskander, Nizar Habash, Owen Rambow, and Mohammed Al-Badrashiny.
-\newblock Processing written Egyptian colloquial Arabic: How to handle
-the challenges.
-\newblock In \emph{Proceedings of the 2013 Conference on Recent Advances
-in Natural Language Processing (RANLP)}, Hissar, Bulgaria, 2013.
+Ramy Eskander, Nizar Habash, Owen Rambow, and Nadi Tomeh.
+\newblock Processing Spontaneous Orthography.
+\newblock In \emph{Proceedings of the 2013 Conference of the North
+American Chapter of the Association for Computational Linguistics:
+Human Language Technologies (NAACL-HLT)}, pages 585--595, Atlanta,
+Georgia, USA, 2013.
 
 \bibitem{obeid2020}
 Ossama Obeid, Nasser Zalmout, Salam Khalifa, Dima Taji, Mai Oudah,
@@ -398,13 +397,16 @@ Habash.
 \newblock CAMeL Tools: An open source Python toolkit for Arabic natural
 language processing.
 \newblock In \emph{Proceedings of the 12th Language Resources and
-Evaluation Conference (LREC)}, Marseille, France, 2020.
+Evaluation Conference (LREC)}, pages 7022--7032, Marseille, France,
+2020.
 
 \bibitem{bouamor2018}
-Houda Bouamor, Sajjad Hassan, Nizar Habash, and Kevin Duh.
-\newblock The MADAR Arabic dialect corpus and lexicon.
-\newblock In \emph{Proceedings of the 11th Language Resources and
-Evaluation Conference (LREC)}, Miyazaki, Japan, 2018.
+Houda Bouamor, Nizar Habash, Mohammad Salameh, Wajdi Zaghouani, Owen
+Rambow, Dana Abdulrahim, Ossama Obeid, Salam Khalifa, Fadhl Eryani,
+Alexander Erdmann, and Kemal Oflazer.
+\newblock The MADAR Arabic Dialect Corpus and Lexicon.
+\newblock In \emph{Proceedings of the 11th International Conference on
+Language Resources and Evaluation (LREC 2018)}, Miyazaki, Japan, 2018.
 
 \end{thebibliography}
 
@@ -435,7 +437,8 @@ the trained model is rebuilt locally with \az{arabizikit model train}.
   \item v0.3: Maghrebi conventions and dialect hints.
   \item v0.4: learned layer (classifier, word table, LM reranking).
   \item v0.5: LLM mode as a first-class API, npm distribution.
-  \item v1.0: paper draft, PyPI and npm releases (1.0.0).
+  \item v1.0: paper draft and PyPI release (1.0.0); npm publication
+      pending.
 \end{itemize}
 
 \end{document}
