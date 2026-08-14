@@ -1,11 +1,7 @@
-% ArabiziKit paper, arXiv submission draft (target: cs.CL).
-%
-% Compile with XeLaTeX (Arabic examples need an Arabic font; Amiri and
-% Noto Naskh Arabic are both available on Overleaf and in TeX Live full).
+% ArabiziKit: an open, hybrid, benchmark-driven system for transliterating
+% Arabizi into Arabic script. Compile with XeLaTeX:
 %   xelatex paper.tex
-%
-% Final for arXiv submission (target: cs.CL). Citations are verified
-% against the ACL Anthology; title and affiliation are final.
+% (Amiri and Noto Naskh Arabic are available on Overleaf and TeX Live full.)
 
 \documentclass[11pt]{article}
 
@@ -42,51 +38,54 @@
 
 \begin{abstract}
 Arabizi, Arabic written in Latin script with digit-substituted letters
-(2 for hamza or qaf, 3 for ayn, 5 for kha), is the default writing system
-for millions of Arabic speakers on WhatsApp, TikTok, and X, yet existing
-transliteration tooling is either a decade-old academic demo or a
-subroutine inside a monolithic toolkit. We present ArabiziKit, a modern,
-dependency-light, open-source library that (i) combines a curated
+(2 for hamza or qaf, 3 for ayn, 5 for kha), is the de facto writing
+system for millions of Arabic speakers on social media, yet available
+transliteration tooling is either a decade-old academic demonstration or
+a component buried inside a monolithic toolkit. We present ArabiziKit, a
+modern, dependency-light, open-source library that (i) combines a curated
 bilingual lexicon with an interpretable rule engine that produces ranked
-candidate readings rather than a single guess, (ii) attaches Arabic
-clitics, seats hamzas orthographically, handles Maghrebi conventions
-(9 as qaf, ch as shin, doubled consonants written once), and tags the
-input dialect, (iii) adds a learned layer trained from a collected corpus:
-a Naive Bayes dialect classifier, a word reading table, and a character
+candidate readings rather than a single guess, (ii) performs clitic
+attachment and orthographic hamza seating, handles Maghrebi conventions
+(9 as qaf, ch as shin, geminates written once), and tags the input
+dialect, (iii) adds a learned layer trained on a collected corpus: a
+Naive Bayes dialect classifier, a word reading table, and a character
 trigram language model that reranks candidates toward natural Arabic, and
 (iv) ships a reproducible evaluation suite with CER, WER, exact@1, and
 hit@k metrics. On our 33-sentence calibration set the hybrid pipeline
-reaches 1.0 exact match. On three external held-out sets with gold
-references it reaches 0.376 exact@1 (Egyptian, 500), 0.296
-(Levantine, 389), and 0.088 (Moroccan Darija, 600) with oracle dialect
+achieves exact match. On three external held-out sets with gold
+references it attains 0.376 exact@1 (Egyptian, 500), 0.296
+(Levantine, 389), and 0.088 (Moroccan Darija, 600) under oracle dialect
 hints; the learned layer raises the pipeline's own held-out test set from
-0.000 to 0.061 exact@1 and cuts CER from 0.299 to 0.226 without seeing any
-test data. A corpus pipeline harvests public Arabizi, annotates it with a
-free-tier LLM (inter-annotator agreement 0.171 over a 10\% double-annotated
-sample, which quantifies the inherent ambiguity of the task), and produces
-stratified held-out splits. We release the library, the pipeline, the
-benchmark, and the browser and npm distributions.
+0.000 to 0.061 exact@1 and reduces CER from 0.299 to 0.226 without
+exposure to test data. A corpus pipeline harvests public Arabizi,
+annotates it with a free-tier LLM (inter-annotator agreement 0.171 over a
+10\% double-annotated sample, which quantifies the inherent ambiguity of
+the task), and produces stratified held-out splits. We release the
+library, the pipeline, the benchmark, and the browser and npm
+distributions.
 \end{abstract}
 
 \section{Introduction}
 \label{sec:intro}
 
-Arabizi is pervasive, under-served, and growing with social media and
-LLM-era NLP. Orthographic conventions differ sharply by region: 2 is a
-hamza in Egypt and the Levant but qaf in the Gulf and Iraq, 8 is qaf in
-the Egyptian convention but heh or ghayn in Maghrebi writing, and short
-vowels are usually omitted.
+Arabizi is among the most common writing systems for Arabic on social
+media, yet it remains underserved by current NLP tooling. Orthographic
+conventions differ sharply by region: 2 is a hamza in Egypt and the
+Levant but qaf in the Gulf and Iraq, 8 is qaf in the Egyptian convention
+but heh or ghayn in Maghrebi writing, and short vowels are usually
+omitted.
 
-Transliteration matters downstream: sentiment analysis, dialect
-identification, machine translation, and LLM prompt hygiene all benefit
-from Arabic-script inputs over Romanized ones for Arabic-capable models.
+Transliteration into Arabic script benefits downstream applications,
+including sentiment analysis, dialect identification, machine
+translation, and LLM-based systems, which perform markedly better on
+Arabic-script input than on Romanized text.
 
 Our contributions are:
 
 \begin{enumerate}
   \item A dependency-free, MIT-licensed Python library plus CLI, browser
-        demo, and npm package, giving instant reproducibility with no
-        infrastructure.
+        demo, and npm package, providing immediate reproducibility with
+        no infrastructure requirements.
   \item A ranked-candidate design that treats ambiguity as first-class
         output instead of hiding it, consumed by an optional LLM mode and
         a learned reranker.
@@ -102,19 +101,20 @@ Arabizi orthography mixes letter and digit conventions by dialect
 (2, 3, 5, 7, 9; g/j alternation; short-vowel elision; French-influenced
 digraphs in Maghrebi such as ch and the 9-as-qaf convention).
 
-Prior systems: Habash et al.~\cite{habash2012} proposed a hybrid
-approach for written Egyptian colloquial; COLABA
-(Al-Badrashiny et al.~\cite{albadrashiny2014}) built a transliteration
-system for dialectal Arabic social media together with the Jordanian
-Arabizi-Transliteration Corpus; Eskander et al.~\cite{eskander2013}
-introduced CODAFY, which converts spontaneous Egyptian colloquial
-writing into conventional orthography; CAMeL Tools (Obeid
-et al.~\cite{obeid2020}) offers an open toolkit with transliteration
-support; MADAR (Bouamor et al.~\cite{bouamor2018}) supplies dialect
-identification resources.
+Several prior systems address Arabizi and its dialectal variants.
+Habash et al.~\cite{habash2012} proposed a hybrid approach for written
+Egyptian colloquial; COLABA (Al-Badrashiny et al.~\cite{albadrashiny2014})
+built a transliteration system for dialectal Arabic social media
+together with the Jordanian Arabizi-Transliteration Corpus; Eskander
+et al.~\cite{eskander2013} introduced CODAFY, which converts spontaneous
+Egyptian colloquial writing into conventional orthography; CAMeL Tools
+(Obeid et al.~\cite{obeid2020}) offers an open toolkit with
+transliteration support; and MADAR (Bouamor et al.~\cite{bouamor2018})
+supplies dialect identification resources.
 
-The gap: no maintained, open, modern (LLM-era) implementation with ranked
-candidate output, a living benchmark, and reproducible held-out numbers.
+To our knowledge, no maintained, open-source, modern system offers ranked
+candidate output, a living benchmark, and reproducible held-out
+evaluations.
 
 \section{Method}
 \label{sec:method}
@@ -159,7 +159,7 @@ default and the ambiguity stays in the candidate list.
 \subsection{Candidate generation and ranking}
 \label{sec:candidates}
 
-A bounded cartesian product of per-position options, with
+A bounded Cartesian product of per-position options, with
 orthographic-plausibility penalties on bad bigrams and stable
 tie-breaking. Output is the ranked top-k.
 
@@ -198,10 +198,9 @@ external sets are excluded):
 
 For genuinely ambiguous input, the top-k candidates are handed to an LLM
 that picks the intended reading and tags the dialect. The client is
-provider-agnostic and free by default: Groq's free tier
-(\az{openai/gpt-oss-120b}, no credit card), with OpenAI, Gemini, local
-Ollama, and Anthropic as fallbacks. The same client powers corpus
-annotation.
+provider-agnostic and uses free tiers by default (e.g., Groq's
+\az{openai/gpt-oss-120b}), with OpenAI, Gemini, local Ollama, and
+Anthropic as fallbacks. The same client powers corpus annotation.
 
 \section{Data and benchmark}
 \label{sec:data}
@@ -216,14 +215,13 @@ hybrid pipeline (1.000 exact, 1.000 hit@3, CER 0.000).
 \subsection{Corpus pipeline}
 \label{sec:pipeline}
 
-Harvesting originally targeted Reddit, but anonymous access is blocked
-from many networks and app creation is gated, so the pipeline harvests
-from public Hugging Face datasets (no account needed). The filter keeps
-Latin-script sentences that score as Arabizi, strips URLs, mentions,
-hashtags, and emoji, and splits posts into sentences. Annotation runs on
-a free-tier LLM with retries, rate-limit pacing, resumable batch writes,
-and a deterministic 10\% double-annotated sample for inter-annotator
-agreement.
+We initially targeted Reddit; however, anonymous access is blocked from
+many networks and app creation is gated, so the pipeline harvests from
+public Hugging Face datasets instead. The filter keeps Latin-script
+sentences that score as Arabizi, strips URLs, mentions, hashtags, and
+emoji, and splits posts into sentences. Annotation runs on a free-tier
+LLM with retries, rate-limit pacing, resumable batch writes, and a
+deterministic 10\% double-annotated sample for inter-annotator agreement.
 
 \subsection{External held-out sets}
 \label{sec:external}
@@ -277,27 +275,24 @@ Moroccan Darija (600) & 0.035 & 0.057 & 0.235 & \textbf{0.088} & \textbf{0.115} 
 \end{tabular}
 \end{table}
 
-Reading the table honestly:
+Analysis. The rules generalize to Egyptian and Levantine with zero
+training: roughly a third of inputs are transliterated exactly, and most
+errors fall within one or two characters. The Maghrebi conventions
+(Section~\ref{sec:dialect-conventions}) raise Darija exact@1 from 0.013
+to 0.088 under the oracle hint and cut CER from 0.290 to 0.180, the
+largest single rule-level gain.
 
-\begin{itemize}
-  \item The rules generalize to Egyptian and Levantine with zero
-        training, about a third exact and most misses within a letter or
-        two. The Maghrebi conventions (Section~\ref{sec:dialect-conventions})
-        raise Darija exact@1 from 0.013 to 0.088 under the oracle hint
-        and cut CER from 0.290 to 0.180, the largest single rule-level
-        gain.
-  \item The pipeline test set scores 0.000 exact under the rules: the
-        LLM references are natural renderings (\az{mettabbal} to
-        \ar{متقبل}) while the rules emit literal letter mappings
-        (\ar{متتاببال}). The learned layer closes part of that gap
-        (0.061 exact, CER down a quarter) entirely from training data,
-        and on the dev split raises exact@1 from 0.021 to 0.354, a 17x
-        gain.
-  \item The learned layer trades a few points on the two external sets
-        whose gold style differs from the corpus's annotation style, and
-        lifts Darija above the no-hint baseline by auto-selecting the
-        Maghrebi convention.
-\end{itemize}
+The pipeline test set scores 0.000 exact under the rules: the LLM
+references are natural renderings (\az{mettabbal} to \ar{متقبل}) while
+the rules emit literal letter mappings (\ar{متتاببال}). The learned
+layer closes part of that gap (0.061 exact@1, CER reduced by a quarter)
+entirely from training data, and on the dev split raises exact@1 from
+0.021 to 0.354, a 17-fold improvement.
+
+On the two external sets whose gold orthography differs from the
+corpus's annotation style, the learned layer shows slightly lower
+exact@1, and it lifts Darija above the no-hint baseline by automatically
+selecting the Maghrebi convention.
 
 \begin{table}[t]
 \centering
@@ -324,15 +319,15 @@ Gulf hints change the engine's readings, so a wrong Egyptian or Levantine
 hint is harmless.
 
 Inter-annotator agreement over the double-annotated 10\% sample is 0.171
-exact on normalized Arabic. This is the honest measure of how ambiguous
-Arabizi rendering is: the same model rarely produces the identical
-rendering twice, and both are usually valid.
+exact on normalized Arabic. This agreement quantifies the inherent
+ambiguity of the task: the same model rarely produces the identical
+rendering twice, and both renderings are typically valid.
 
-Error taxonomy from the evaluation rows: short-vowel elision (elision vs
-written), the dialect-dependent 2/qaf split, taa-marbuta vs alef, hamza
-seating, proper nouns, English code-switching, and the French-influenced
-Maghrebi digraphs. Each category is represented in the per-row output of
-\az{arabizikit eval}.
+The error taxonomy drawn from the evaluation rows comprises short-vowel
+elision (elided versus written), the dialect-dependent 2/qaf split,
+taa-marbuta versus alef, hamza seating, proper nouns, English
+code-switching, and the French-influenced Maghrebi digraphs. Each
+category is represented in the per-row output of \az{arabizikit eval}.
 
 \section{Limitations and ethics}
 \label{sec:limits}
@@ -357,14 +352,16 @@ Maghrebi digraphs. Each category is represented in the per-row output of
 \section{Conclusion and future work}
 \label{sec:conclusion}
 
-We presented a hybrid, benchmarked, open transliteration system with
-ranked ambiguity, dialect conventions, a learned layer, an LLM mode, a
-corpus pipeline with inter-annotator agreement, and reproducible numbers.
+We presented ArabiziKit, an open, hybrid transliteration system with
+ranked ambiguity handling, dialect-aware conventions, a learned layer,
+an optional LLM mode, a corpus pipeline with inter-annotator agreement,
+and fully reproducible evaluations.
 
-Future work: a learned reranker over the full candidate list trained on
-more per-dialect data; rule coverage for Levantine and Gulf conventions;
-larger annotated corpora per dialect; publishing the trained model and
-the corpus artifacts on the model and data hubs.
+Future work includes a learned reranker over the full candidate list
+trained on more per-dialect data, extended rule coverage for Levantine
+and Gulf conventions, larger annotated corpora per dialect, and
+publication of the trained model and corpus artifacts on the model and
+data hubs.
 
 \begin{thebibliography}{9}
 
@@ -414,8 +411,8 @@ Language Resources and Evaluation (LREC 2018)}, Miyazaki, Japan, 2018.
 \section{Reproducibility}
 \label{app:repro}
 
-The library is installed with \az{pip install arabizikit}. Every number
-in this paper is reproduced with:
+The library is installed with \az{pip install arabizikit} (release v1.0.0
+on PyPI). Every number in this paper is reproduced with:
 
 \begin{verbatim}
 arabizikit eval           # rules, all sets
@@ -425,20 +422,5 @@ arabizikit eval --model   # learned layer
 The corpus pipeline, from harvest through annotation to stratified
 splits, is documented in \az{RELEASE.md} and the repository README, and
 the trained model is rebuilt locally with \az{arabizikit model train}.
-
-\section{Release history}
-\label{app:releases}
-
-\begin{itemize}
-  \item v0.1: rule engine, seed lexicon, benchmark, CLI, browser demo.
-  \item v0.2: corpus pipeline (HF harvest, free-tier LLM annotation,
-        inter-annotator agreement, stratified split), external held-out
-        sets.
-  \item v0.3: Maghrebi conventions and dialect hints.
-  \item v0.4: learned layer (classifier, word table, LM reranking).
-  \item v0.5: LLM mode as a first-class API, npm distribution.
-  \item v1.0: paper draft and PyPI release (1.0.0); npm publication
-      pending.
-\end{itemize}
 
 \end{document}
