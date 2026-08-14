@@ -1,5 +1,10 @@
 # ArabiziKit - open-source Arabizi -> Arabic-script NLP toolkit
 
+[![PyPI version](https://img.shields.io/pypi/v/arabizikit.svg)](https://pypi.org/project/arabizikit)
+[![npm version](https://img.shields.io/npm/v/arabizikit.svg)](https://www.npmjs.com/package/arabizikit)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-113%20passing-brightgreen.svg)]()
+
 Transliterate **Arabizi** (Arabic written in Latin letters and digits - `2` for hamza/qaf, `3` for ʿayn, `7` for ḥāʾ, `5` for khāʾ...) into proper Arabic script, tag the dialect, and evaluate it all reproducibly.
 
 Try it live: **https://arabizi-kit.vercel.app** (browser demo with a dialect selector, powered by the same engine on npm).
@@ -28,6 +33,15 @@ maintained, open-source Arabizi library** with:
 
 That gap is this project. It is designed from day one as research infrastructure:
 the corpus, benchmark, and paper plan live in-repo.
+
+## Paper
+
+"ArabiziKit: An Open, Hybrid, Benchmark-Driven Arabizi to Arabic-Script
+Transliteration System" - submitted to **arXiv (cs.CL)**, XeLaTeX source with
+bundled Amiri fonts in `paper/` (arXiv link added on announcement). Launch
+material (LinkedIn post, CV bullets) is in `docs/launch.md`; publishing the
+trained model and corpus to the Hugging Face Hub is scripted in
+`docs/hf-hub-release.md`.
 
 ## Architecture
 
@@ -119,8 +133,6 @@ arabizikit "ya3ne shu" --llm --llm-provider ollama --llm-model llama3.2
 Keys come from GROQ_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY,
 ANTHROPIC_API_KEY, or ARABIZIKIT_API_KEY (see arabizikit/llm.py). The same
 client powers the corpus annotation stage.
-
-## Web demo
 
 ## Web demo
 
@@ -290,8 +302,10 @@ The v0.3 rule work targets exactly the conventions that previously produced
 nothing on Darija: 9 as qaf, ch as shin, doubled consonants written once
 (bzzaf -> بزاف), emphatic capitals (T -> ط, S -> ص), the assimilated
 definite article (jjaya -> الجاية), and a Maghrebi lexicon block. Darija
-exact@1 rose from 0.013 to 0.088, hit@3 from 0.023 to 0.115, and CER fell
-from 0.290 to 0.180, while Egyptian and Levantine held or improved.
+exact@1 rose from 0.013 (v0.2 baseline) to 0.088 with the oracle hint, hit@3
+from 0.023 to 0.115, and CER fell from 0.290 to 0.180 - the no-hint baseline
+today is 0.035 once the Maghrebi lexicon block landed - while Egyptian and
+Levantine held or improved.
 
 What remains is honest and documented: short-vowel elision and the ay/ya
 distinction are per-word, so a sentence that needs two conventions at once
@@ -305,13 +319,14 @@ top-3. Picking that reading is what the v0.4 learned layer does where the corpus
 - [x] **v0.3** - Maghrebi rule coverage (9/ch/doubling/case conventions) and dialect hints; results in Benchmark
 - [x] **v0.4** - learned layer: dialect classifier, word reading table, language-model reranking; results in Benchmark
 - [x] **v0.5** - LLM mode as a first-class API, npm/JS distribution
-- [x] **v1.0** - paper draft (paper/outline.md, paper/paper.tex), published on PyPI and npm (1.0.0)
+- [x] **v1.0** - paper (paper/paper.tex) submitted to arXiv (cs.CL), published on PyPI and npm (1.0.0)
 
 ## Contributing
 
 Corpus contributions are the highest-value contribution: add real Arabizi
 sentences (with reference Arabic + dialect tag) to `data/benchmark.json` and
-run `arabizikit eval`. See `paper/outline.md` for the research framing.
+run `arabizikit eval`. See `paper/outline.md` for the research framing, and
+`docs/hf-hub-release.md` to publish the model and corpus to the Hub.
 
 ## Release
 
