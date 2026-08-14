@@ -39,9 +39,12 @@ the corpus, benchmark, and paper plan live in-repo.
 "ArabiziKit: An Open, Hybrid, Benchmark-Driven Arabizi to Arabic-Script
 Transliteration System" - submitted to **arXiv (cs.CL)**, XeLaTeX source with
 bundled Amiri fonts in `paper/` (arXiv link added on announcement). Launch
-material (LinkedIn post, CV bullets) is in `docs/launch.md`; publishing the
-trained model and corpus to the Hugging Face Hub is scripted in
-`docs/hf-hub-release.md`.
+material (LinkedIn post, CV bullets) is in `docs/launch.md`.
+
+## Datasets and models
+
+- **Dataset** ([huggingface.co/datasets/rabeeeehh/arabizi-kit-corpus](https://huggingface.co/datasets/rabeeeehh/arabizi-kit-corpus)): 355 LLM-annotated Arabizi sentences plus stratified train/dev/test splits (IAA 0.171), with the three external gold sets linked and rebuildable via `arabizikit corpus import-hf`.
+- **Model** ([huggingface.co/rabeeeehh/arabizi-kit-model](https://huggingface.co/rabeeeehh/arabizi-kit-model)): the trained layer - word reading table (1,155 entries), character trigram LM, and Naive Bayes dialect classifier data.
 
 ## Architecture
 

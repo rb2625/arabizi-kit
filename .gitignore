@@ -24,3 +24,4 @@ corpus_data/
 
 # npm auth token for publishing; never commit this file
 web/.npmrc
+hf_staging/

@@ -46,6 +46,8 @@ of the opener so you can pick the tone.
 > 🌐 Demo: https://arabizi-kit.vercel.app
 > 📦 PyPI: https://pypi.org/project/arabizikit
 > 📦 npm: https://www.npmjs.com/package/arabizikit
+> 🤗 Dataset: https://huggingface.co/datasets/rabeeeehh/arabizi-kit-corpus
+> 🤗 Model: https://huggingface.co/rabeeeehh/arabizi-kit-model
 
 **Version B — story hook (same body, different opener):**
 
