@@ -1,5 +1,7 @@
+%&xelatex
 % ArabiziKit: an open, hybrid, benchmark-driven system for transliterating
-% Arabizi into Arabic script. Compile with XeLaTeX:
+% Arabizi into Arabic script. Compile with XeLaTeX (the %&xelatex line
+% tells arXiv to use the XeLaTeX engine):
 %   xelatex paper.tex
 % (Amiri and Noto Naskh Arabic are available on Overleaf and TeX Live full.)
 
@@ -8,21 +10,25 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{booktabs}
 \usepackage{microtype}
-\usepackage{url}
+\usepackage{xurl}   % lets long URLs break anywhere (arXiv TeX Live 2025 has it)
 \usepackage{xcolor}
 \usepackage{fontspec}
 \usepackage[hidelinks]{hyperref}
 \setlength{\emergencystretch}{3em}
 
-% Arabic text in examples. Tries Amiri, then Noto Naskh Arabic, then
-% DejaVu Sans (ships with TeX Live), so the document compiles even
-% without a dedicated Arabic font; glyphs then fall back to whatever
-% supports Arabic.
-\IfFontExistsTF{Amiri}
-  {\newfontfamily{\arabicfont}{Amiri}[Script=Arabic]}
-  {\IfFontExistsTF{Noto Naskh Arabic}
-     {\newfontfamily{\arabicfont}{Noto Naskh Arabic}[Script=Arabic]}
-     {\newfontfamily{\arabicfont}{DejaVu Sans}[Script=Arabic]}}
+% Arabic text in examples. The paper ships Amiri in fonts/ so the
+% document compiles identically on arXiv, Overleaf, and TeX Live: the
+% bundled files are used when present, then Amiri, then Noto Naskh Arabic,
+% then DejaVu Sans (which ships with TeX Live but has no Arabic glyphs,
+% so boxes appear only as a last resort). Compile from this directory:
+%   xelatex paper.tex
+\IfFileExists{fonts/Amiri-Regular.ttf}
+  {\newfontfamily{\arabicfont}{Amiri}[Path=./fonts/, Extension=.ttf, UprightFont=Amiri-Regular, BoldFont=Amiri-Bold, Script=Arabic]}
+  {\IfFontExistsTF{Amiri}
+     {\newfontfamily{\arabicfont}{Amiri}[Script=Arabic]}
+     {\IfFontExistsTF{Noto Naskh Arabic}
+        {\newfontfamily{\arabicfont}{Noto Naskh Arabic}[Script=Arabic]}
+        {\newfontfamily{\arabicfont}{DejaVu Sans}[Script=Arabic]}}}
 \newcommand{\ar}[1]{{\arabicfont #1}}
 \newcommand{\az}[1]{\texttt{#1}}
 
@@ -122,7 +128,7 @@ evaluations.
 \subsection{Lexicon layer}
 \label{sec:lexicon}
 
-A curated bilingual lexicon of roughly 180 entries, dialect-tagged, with a
+A curated bilingual lexicon of roughly 200 entries, dialect-tagged, with a
 Maghrebi block added in v0.3. Exact matches win outright and carry
 dialect evidence; there is no ambiguity for known words.
 
@@ -278,8 +284,8 @@ Moroccan Darija (600) & 0.035 & 0.057 & 0.235 & \textbf{0.088} & \textbf{0.115} 
 Analysis. The rules generalize to Egyptian and Levantine with zero
 training: roughly a third of inputs are transliterated exactly, and most
 errors fall within one or two characters. The Maghrebi conventions
-(Section~\ref{sec:dialect-conventions}) raise Darija exact@1 from 0.013
-to 0.088 under the oracle hint and cut CER from 0.290 to 0.180, the
+(Section~\ref{sec:dialect-conventions}) raise Darija exact@1 from 0.035
+to 0.088 under the oracle hint and cut CER from 0.235 to 0.180, the
 largest single rule-level gain.
 
 The pipeline test set scores 0.000 exact under the rules: the LLM
