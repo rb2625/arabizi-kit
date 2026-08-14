@@ -9,6 +9,8 @@ Transliterate **Arabizi** (Arabic written in Latin letters and digits - `2` for 
 
 Try it live: **https://arabizi-kit.vercel.app** (browser demo with a dialect selector, powered by the same engine on npm).
 
+![ArabiziKit demo](web/demo.gif)
+
 ```bash
 $ arabizikit "ana 3ayz 2akol"
 أنا عايز آكل
