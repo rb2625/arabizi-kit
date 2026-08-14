@@ -20,4 +20,10 @@ jobs:
       - name: Publish
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: uv publish
+        run: |
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          if curl -sf "https://pypi.org/pypi/arabizikit/${VERSION}/json" > /dev/null; then
+            echo "arabizikit ${VERSION} is already on PyPI - skipping publish"
+          else
+            uv publish
+          fi
